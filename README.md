@@ -77,8 +77,7 @@ vortex-mp3-downloader/
 ### 1. Clonar el repositorio
 
 ```bash
-git clone https://github.com/tu-usuario/vortex-mp3-downloader.git
-cd vortex-mp3-downloader
+git clone https://github.com/ArcGabicho/vortex-mp3-downloader.git && cd vortex-mp3-downloader
 ```
 
 ### 2. Configurar variables de entorno
