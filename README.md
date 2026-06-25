@@ -15,8 +15,6 @@
 
 **Vortex MP3 Downloader** es un servicio web gratuito construido con **FastAPI** que permite descargar audio en formato MP3 a partir de URLs de YouTube. El proyecto está diseñado con una arquitectura moderna y escalable usando **PostgreSQL** como base de datos y **Cloudflare R2** para el almacenamiento de objetos.
 
----
-
 ## ✨ Características
 
 - 🎵 **Descarga de MP3** — Extrae y convierte audio de videos de YouTube a formato MP3 de alta calidad.
@@ -25,8 +23,6 @@
 - 🐳 **Dockerizado** — Despliegue reproducible con Docker Compose (app + PostgreSQL).
 - ⚡ **API RESTful** — Endpoints rápidos y documentados automáticamente con OpenAPI/Swagger.
 - 🔄 **Procesamiento asíncrono** — Operaciones no bloqueantes para manejar múltiples descargas concurrentes.
-
----
 
 ## 🛠️ Stack Tecnológico
 
@@ -39,8 +35,6 @@
 | **Descargas**    | yt-dlp + FFmpeg                               |
 | **Contenedores** | Docker + Docker Compose                        |
 | **Cliente S3**   | boto3 / s3fs                                   |
-
----
 
 ## 📦 Estructura del Proyecto
 
@@ -68,8 +62,6 @@ vortex-mp3-downloader/
 ├── .env                    # Variables de entorno (no versionado)
 └── .gitignore
 ```
-
----
 
 ## 🚀 Inicio Rápido
 
@@ -183,8 +175,6 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
 La API estará disponible en `http://localhost:8000`.
 
----
-
 ## 🧪 Uso de la API
 
 ### Descargar un MP3
@@ -244,8 +234,6 @@ curl "http://localhost:8000/health"
 }
 ```
 
----
-
 ## 🌐 Interfaz Web
 
 Además de la API, el proyecto incluye una interfaz web en `http://localhost:8000/` con:
@@ -254,8 +242,6 @@ Además de la API, el proyecto incluye una interfaz web en `http://localhost:800
 - Lista de descargas recientes con actualización en tiempo real
 - Botón de descarga directa del MP3 cuando finaliza el procesamiento
 - Diseño responsive y moderno (modo oscuro)
-
----
 
 ## 📖 API
 
@@ -269,8 +255,6 @@ Además de la API, el proyecto incluye una interfaz web en `http://localhost:800
 
 La documentación completa de la API está disponible en `/docs` (Swagger UI) y `/redoc` (ReDoc).
 
----
-
 ## 🤝 Contribuciones
 
 Las contribuciones son bienvenidas. Por favor:
@@ -280,8 +264,6 @@ Las contribuciones son bienvenidas. Por favor:
 3. Haz commit de tus cambios (`git commit -m 'feat: agregar nueva funcionalidad'`)
 4. Haz push a la rama (`git push origin feature/nueva-funcionalidad`)
 5. Abre un Pull Request
-
----
 
 ## 📄 Licencia
 
