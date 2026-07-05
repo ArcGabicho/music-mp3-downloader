@@ -4,8 +4,8 @@ import logging
 from pathlib import Path
 
 TEMP_DIR = Path("/tmp/vortex-downloads")
-logger = logging.getLogger(__name__)
 
+logger = logging.getLogger(__name__)
 
 async def _run_ytdlp(*args: str) -> tuple[str, str, int]:
     proc = await asyncio.create_subprocess_exec(

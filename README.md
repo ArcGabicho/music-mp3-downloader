@@ -160,6 +160,9 @@ Asegúrate de tener **FFmpeg** instalado en tu sistema:
 # Linux (Debian/Ubuntu)
 sudo apt install ffmpeg
 
+# Linux (Arch)
+sudo pacman -S ffmpeg
+
 # Mac
 brew install ffmpeg
 

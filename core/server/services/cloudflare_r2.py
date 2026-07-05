@@ -1,10 +1,9 @@
-import asyncio
 from pathlib import Path
 
+import asyncio
 import boto3
 
-from config.cloudflare import settings
-
+from core.server.config.cloudflare import settings
 
 def _get_client():
     return boto3.client(

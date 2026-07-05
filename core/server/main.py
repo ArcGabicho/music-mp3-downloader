@@ -1,19 +1,20 @@
-import asyncio
-import logging
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
-from config.database import async_session, get_db, init_db
-from config.cloudflare import settings
-from models.download import Download, DownloadStatus
-from services.cloudflare_r2 import upload_file
-from services.mp3_download import download_mp3
-from views.router import router as views_router
+from core.server.config.database import async_session, get_db, init_db
+from core.server.config.cloudflare import settings
+from core.server.models.download import Download, DownloadStatus
+from core.server.services.cloudflare_r2 import upload_file
+from core.server.services.mp3_download import download_mp3
+from core.server.views.router import router as views_router
+
+import asyncio
+import logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -22,11 +23,9 @@ app = FastAPI(title="Vortex MP3 Downloader")
 app.mount("/static", StaticFiles(directory=Path(__file__).parent / "views" / "static"), name="static")
 app.include_router(views_router)
 
-
 @app.on_event("startup")
 async def startup():
     await init_db()
-
 
 async def process_download(download_id: str, url: str):
     async with async_session() as db:
@@ -61,7 +60,6 @@ async def process_download(download_id: str, url: str):
             download.error_message = str(exc)
             await db.commit()
 
-
 @app.post("/download")
 async def create_download(url: str = Query(..., description="YouTube video URL"), db: AsyncSession = Depends(get_db)):
     download = Download(url=url)
@@ -76,7 +74,6 @@ async def create_download(url: str = Query(..., description="YouTube video URL")
         "status": download.status.value,
         "url": url,
     }
-
 
 @app.get("/download/{download_id}")
 async def get_download(download_id: str, db: AsyncSession = Depends(get_db)):
@@ -99,7 +96,6 @@ async def get_download(download_id: str, db: AsyncSession = Depends(get_db)):
         "updated_at": str(download.updated_at),
     }
 
-
 @app.get("/download/{download_id}/file")
 async def get_download_file(download_id: str, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Download).where(Download.id == download_id))
@@ -114,7 +110,6 @@ async def get_download_file(download_id: str, db: AsyncSession = Depends(get_db)
 
     file_url = f"{settings.r2_public_url}/{download.file_key}"
     return RedirectResponse(url=file_url)
-
 
 @app.get("/downloads")
 async def list_downloads(db: AsyncSession = Depends(get_db)):
@@ -137,7 +132,6 @@ async def list_downloads(db: AsyncSession = Depends(get_db)):
         }
         for d in downloads
     ]
-
 
 @app.get("/health")
 async def health():

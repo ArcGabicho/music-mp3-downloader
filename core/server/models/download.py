@@ -1,19 +1,18 @@
-import enum
-import uuid
 from datetime import datetime
 
 from sqlalchemy import DateTime, Enum as SAEnum, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
-from config.database import Base
+from core.server.config.database import Base
 
+import enum
+import uuid
 
 class DownloadStatus(str, enum.Enum):
     PENDING = "pending"
     PROCESSING = "processing"
     COMPLETED = "completed"
     FAILED = "failed"
-
 
 class Download(Base):
     __tablename__ = "downloads"
