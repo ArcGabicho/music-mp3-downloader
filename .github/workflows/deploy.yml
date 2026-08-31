@@ -1,0 +1,113 @@
+name: Deploy
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Etiqueta a publicar (ej. v1.2.3)"
+        required: true
+
+permissions:
+  contents: write
+
+env:
+  DOTNET_VERSION: "10.0.x"
+  PROJECT: core/MusicMp3Downloader.App.csproj
+  CONFIGURATION: Release
+
+jobs:
+  package:
+    name: Package (${{ matrix.rid }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: linux-x64
+            runner: ubuntu-latest
+          - rid: win-x64
+            runner: windows-latest
+          - rid: osx-x64
+            runner: macos-13
+          - rid: osx-arm64
+            runner: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Resolve version
+        id: version
+        shell: bash
+        run: |
+          ref="${{ github.event.inputs.version || github.ref_name }}"
+          echo "tag=${ref}" >> "$GITHUB_OUTPUT"
+          echo "number=${ref#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Publish
+        run: >
+          dotnet publish ${{ env.PROJECT }}
+          --configuration ${{ env.CONFIGURATION }}
+          --runtime ${{ matrix.rid }}
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:Version=${{ steps.version.outputs.number }}
+          --output ./artifacts/${{ matrix.rid }}
+
+      - name: Archive (tar.gz)
+        if: runner.os != 'Windows'
+        run: >
+          tar -czf "MusicMp3Downloader-${{ steps.version.outputs.number }}-${{ matrix.rid }}.tar.gz"
+          -C ./artifacts/${{ matrix.rid }} .
+
+      - name: Archive (zip)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: >
+          Compress-Archive -Path ./artifacts/${{ matrix.rid }}/*
+          -DestinationPath "MusicMp3Downloader-${{ steps.version.outputs.number }}-${{ matrix.rid }}.zip"
+
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-${{ matrix.rid }}
+          path: MusicMp3Downloader-*
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub Release
+    needs: package
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download packages
+        uses: actions/download-artifact@v4
+        with:
+          path: ./dist
+          pattern: package-*
+          merge-multiple: true
+
+      - name: Create or update release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.inputs.version || github.ref_name }}
+        run: |
+          prerelease=""
+          [[ "$TAG" == *-* ]] && prerelease="--prerelease"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" ./dist/* --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create "$TAG" ./dist/* \
+              --repo "$GITHUB_REPOSITORY" \
+              --target "$GITHUB_SHA" \
+              --title "$TAG" \
+              --generate-notes \
+              $prerelease
+          fi

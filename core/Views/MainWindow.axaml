@@ -1,0 +1,44 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:MusicMp3Downloader.App.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="760" d:DesignHeight="520"
+        x:Class="MusicMp3Downloader.App.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="Music MP3 Downloader"
+        Width="760" Height="520">
+
+    <DockPanel Margin="16">
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="8">
+            <TextBox Width="580"
+                     PlaceholderText="Pega una URL de YouTube…"
+                     Text="{Binding Url}" />
+            <Button Content="Descargar"
+                    Command="{Binding DownloadCommand}"
+                    IsDefault="True" />
+        </StackPanel>
+
+        <TextBlock DockPanel.Dock="Bottom"
+                   Margin="0,8,0,0"
+                   Opacity="0.7"
+                   Text="{Binding Status}" />
+
+        <ListBox Margin="0,12,0,0" ItemsSource="{Binding Downloads}">
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="vm:DownloadItemViewModel">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="{Binding Status}" Opacity="0.7" VerticalAlignment="Center" />
+                            <ProgressBar Width="220" Minimum="0" Maximum="1" Value="{Binding Progress}" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding ErrorMessage}"
+                                   Foreground="IndianRed"
+                                   IsVisible="{Binding ErrorMessage, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </DockPanel>
+</Window>

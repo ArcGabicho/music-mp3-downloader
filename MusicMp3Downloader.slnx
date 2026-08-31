@@ -1,5 +1,5 @@
 <Solution>
   <Folder Name="/core/">
-    <Project Path="core/MusicMp3Downloader.App/MusicMp3Downloader.App.csproj" />
+    <Project Path="core/MusicMp3Downloader.App.csproj" />
   </Folder>
 </Solution>

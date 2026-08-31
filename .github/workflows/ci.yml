@@ -104,7 +104,7 @@ jobs:
 
       - name: Publish
         run: >
-          dotnet publish core/MusicMp3Downloader.App/MusicMp3Downloader.App.csproj
+          dotnet publish core/MusicMp3Downloader.App.csproj
           --configuration ${{ env.CONFIGURATION }}
           --runtime ${{ matrix.rid }}
           --self-contained true
