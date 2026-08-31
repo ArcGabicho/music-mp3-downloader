@@ -1,269 +1,147 @@
 # Music MP3 Downloader
 
-<p align="center">
-  <img src="https://i.imgur.com/2lcUDNj.png" alt="Vortex MP3 Downloader">
-</p>
+![Wallpaper](https://i.imgur.com/2lcUDNj.png)
 
-<p align="center">
-  <img src="https://img.shields.io/badge/python-3.12+-blue?logo=python" alt="Python">
-  <img src="https://img.shields.io/badge/FastAPI-0.115+-009688?logo=fastapi" alt="FastAPI">
-  <img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql" alt="PostgreSQL">
-  <img src="https://img.shields.io/badge/Cloudflare%20R2-Object%20Storage-F38020?logo=cloudflare" alt="Cloudflare R2">
-  <img src="https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker" alt="Docker">
-  <img src="https://img.shields.io/badge/license-MIT-green" alt="License">
-</p>
+<img src="https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet" alt=".NET">
+<img src="https://img.shields.io/badge/C%23-13-239120?logo=csharp" alt="C#">
+<img src="https://img.shields.io/badge/Avalonia%20UI-12.1-8B44AC?logo=avalonia" alt="Avalonia UI">
+<img src="https://img.shields.io/badge/cross--platform-Windows%20%7C%20macOS%20%7C%20Linux-informational" alt="Cross-platform">
+<img src="https://img.shields.io/badge/license-MIT-green" alt="License">
 
-**Music MP3 Downloader** es un servicio web gratuito construido con **FastAPI** que permite descargar audio en formato MP3 a partir de URLs de YouTube. El proyecto está diseñado con una arquitectura moderna y escalable usando **PostgreSQL** como base de datos y **Cloudflare R2** para el almacenamiento de objetos.
+
+**Music MP3 Downloader** es una aplicación de escritorio multiplataforma construida con **.NET 10** y **Avalonia UI** que permite descargar audio en formato MP3 a partir de URLs de YouTube. El proyecto migró de un servicio web FastAPI a una aplicación nativa de escritorio para funcionar sin servidor ni dependencias externas de infraestructura.
+
+> ⚠️ **Estado:** el proyecto se encuentra en fase temprana de desarrollo. La interfaz y el motor de descarga están en construcción.
 
 ## ✨ Características
 
-- 🎵 **Descarga de MP3** — Extrae y convierte audio de videos de YouTube a formato MP3 de alta calidad.
-- ☁️ **Almacenamiento en Cloudflare R2** — Los archivos descargados se almacenan de forma duradera y eficiente en R2.
-- 🗄️ **Base de datos PostgreSQL** — Registro de descargas, usuarios y metadatos con SQLAlchemy + asyncpg.
-- 🐳 **Dockerizado** — Despliegue reproducible con Docker Compose (app + PostgreSQL).
-- ⚡ **API RESTful** — Endpoints rápidos y documentados automáticamente con OpenAPI/Swagger.
-- 🔄 **Procesamiento asíncrono** — Operaciones no bloqueantes para manejar múltiples descargas concurrentes.
+- 🎵 **Descarga de MP3** — Extrae y convierte audio de videos de YouTube a formato MP3.
+- 🖥️ **Aplicación de escritorio nativa** — Sin navegador ni servidor: se ejecuta directamente en tu equipo.
+- 🌐 **Multiplataforma** — Un mismo código base para Windows, macOS y Linux gracias a Avalonia UI.
+- 🎨 **Tema Fluent** — Interfaz moderna con soporte para modo claro/oscuro siguiendo el tema del sistema.
+- 📦 **Distribución autónoma** — Publicación como ejecutable único self-contained, sin necesidad de instalar el runtime de .NET.
 
 ## 🛠️ Stack Tecnológico
 
-| Componente       | Tecnología                                    |
-|------------------|-----------------------------------------------|
-| **Framework**    | FastAPI                                       |
-| **Lenguaje**     | Python 3.12+                                  |
-| **Base de Datos**| PostgreSQL 16 + asyncpg + SQLAlchemy (async)  |
-| **Storage**      | Cloudflare R2 (compatible con S3 API)         |
-| **Descargas**    | yt-dlp + FFmpeg                               |
-| **Contenedores** | Docker + Docker Compose                        |
-| **Cliente S3**   | boto3 / s3fs                                   |
+| Componente          | Tecnología                          |
+|---------------------|-------------------------------------|
+| **Runtime**         | .NET 10                             |
+| **Lenguaje**        | C# 13                               |
+| **UI**              | Avalonia UI 12 + Fluent Theme       |
+| **Tipografía**      | Inter (Avalonia.Fonts.Inter)        |
+| **Diagnóstico**     | AvaloniaUI.DiagnosticsSupport (solo Debug) |
+| **Conversión audio**| FFmpeg (dependencia externa)        |
+| **CI/CD**           | GitHub Actions                      |
 
 ## 📦 Estructura del Proyecto
 
 ```
 music-mp3-downloader/
-├── config/
-│   ├── cloudflare.py       # Configuración de Cloudflare R2
-│   └── database.py         # Configuración y sesión de base de datos
-├── models/
-│   └── download.py         # Modelos SQLAlchemy (descargas, usuarios)
-├── services/
-│   ├── cloudflare_r2.py    # Lógica de subida/descarga a R2
-│   └── mp3_download.py     # Lógica de extracción y conversión de audio
-├── views/
-│   ├── router.py           # Rutas de la interfaz web
-│   ├── templates/
-│   │   └── index.html      # Página principal
-│   └── static/
-│       ├── styles.css      # Estilos de la UI
-│       └── app.js          # Lógica del frontend
-├── main.py                 # Punto de entrada de la aplicación FastAPI
-├── requirements.txt        # Dependencias de Python
-├── Dockerfile              # Imagen de producción
-├── docker-compose.yml      # Orquestación de servicios
-├── .env                    # Variables de entorno (no versionado)
-└── .gitignore
+├── MusicMp3Downloader.slnx              # Solución (formato XML .slnx)
+├── core/
+│   └── MusicMp3Downloader.App/          # Proyecto de aplicación Avalonia
+│       ├── App.axaml / App.axaml.cs     # Punto de arranque de la aplicación Avalonia
+│       ├── MainWindow.axaml / .cs       # Ventana principal
+│       ├── Program.cs                   # Entry point (AppBuilder + desktop lifetime)
+│       ├── app.manifest                 # Manifiesto de aplicación (Windows)
+│       └── MusicMp3Downloader.App.csproj
+├── docs/                                # Documentación
+├── test/                                # Proyectos de pruebas (pendiente)
+├── .github/workflows/ci.yml             # Pipeline de integración continua
+└── README.md
 ```
 
 ## 🚀 Inicio Rápido
 
 ### Prerrequisitos
 
-- **Python 3.12+** — Entorno de ejecución.
-- **Docker + Docker Compose** — Opcional, pero recomendado para evitar instalar dependencias manualmente.
-- **FFmpeg** — Necesario para la conversión de audio (lo incluye la imagen Docker automáticamente).
-- **Cuenta de Cloudflare R2** — Con un bucket creado y credenciales de acceso (Access Key + Secret Key).
-- **PostgreSQL 16** — Solo si ejecutas sin Docker; con Docker Compose se levanta automáticamente.
-
-### 1. Clonar el repositorio
-
-```bash
-git clone https://github.com/ArcGabicho/music-mp3-downloader.git && cd music-mp3-downloader
-```
-
-### 2. Configurar variables de entorno
-
-Copia el archivo de ejemplo y completa los valores según tu cuenta de Cloudflare R2:
-
-```bash
-cp .env.example .env
-```
-
-| Variable                  | Descripción                                      | Ejemplo                                              |
-|---------------------------|--------------------------------------------------|------------------------------------------------------|
-| `DATABASE_URL`            | URI de conexión a PostgreSQL                     | `postgresql+asyncpg://postgres:postgres@db:5432/vortex` |
-| `R2_ACCESS_KEY_ID`        | Access Key ID de Cloudflare R2                   | `7a8b9c0d1e2f3a4b5c6d`                              |
-| `R2_SECRET_ACCESS_KEY`    | Secret Access Key de Cloudflare R2               | `a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0`         |
-| `R2_BUCKET_NAME`          | Nombre del bucket en R2                          | `vortex-mp3`                                         |
-| `R2_ENDPOINT_URL`         | Endpoint del bucket R2                           | `https://<accountid>.r2.cloudflarestorage.com`       |
-| `R2_PUBLIC_URL`           | URL pública del bucket (para descargas)          | `https://pub-<hash>.r2.dev`                          |
-
-> **Nota:** La `DATABASE_URL` del ejemplo asume que PostgreSQL corre en el contenedor llamado `db`. Si ejecutas sin Docker, cambia `db` por `localhost`.
-
-### 3. Ejecutar con Docker (recomendado)
-
-Este comando levanta la aplicación y PostgreSQL en segundo plano:
-
-```bash
-docker compose up -d
-```
-
-Para ver los logs en tiempo real:
-
-```bash
-docker compose logs -f
-```
-
-La aplicación estará disponible en:
-
-| URL                        | Descripción                     |
-|----------------------------|---------------------------------|
-| `http://localhost:8000`    | API base                        |
-| `http://localhost:8000/docs` | Swagger UI (documentación interactiva) |
-| `http://localhost:8000/redoc` | ReDoc (documentación alternativa) |
-
-Para detener los servicios:
-
-```bash
-docker compose down
-```
-
-> Para eliminar también el volumen de la base de datos: `docker compose down -v`
-
-### 4. Ejecutar sin Docker (desarrollo local)
-
-#### 4.1. Preparar PostgreSQL
-
-Asegúrate de tener PostgreSQL 16 corriendo y crea la base de datos:
-
-```bash
-createdb music_mp3
-```
-
-O desde psql:
-
-```sql
-CREATE DATABASE music_mp3;
-```
-
-#### 4.2. Crear entorno virtual e instalar dependencias
-
-```bash
-python -m venv .venv
-source .venv/bin/activate   # Linux/Mac
-# .venv\Scripts\activate    # Windows
-
-pip install -r requirements.txt
-```
-
-Asegúrate de tener **FFmpeg** instalado en tu sistema:
+- **.NET SDK 10.0+** — [Descargar](https://dotnet.microsoft.com/download/dotnet/10.0).
+- **FFmpeg** — Necesario para la conversión de audio a MP3.
 
 ```bash
 # Linux (Debian/Ubuntu)
 sudo apt install ffmpeg
 
-# Mac
+# macOS
 brew install ffmpeg
 
 # Windows
 winget install ffmpeg
 ```
 
-#### 4.3. Iniciar la aplicación
+### 1. Clonar el repositorio
 
 ```bash
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+git clone https://github.com/ArcGabicho/music-mp3-downloader.git
+cd music-mp3-downloader
 ```
 
-La API estará disponible en `http://localhost:8000`.
-
-## 🧪 Uso de la API
-
-### Descargar un MP3
+### 2. Restaurar dependencias
 
 ```bash
-curl -X POST "http://localhost:8000/download?url=https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+dotnet restore MusicMp3Downloader.slnx
 ```
 
-Respuesta:
-
-```json
-{
-  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-  "status": "pending",
-  "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-}
-```
-
-### Consultar el estado
+### 3. Ejecutar la aplicación
 
 ```bash
-curl "http://localhost:8000/download/a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+dotnet run --project core/MusicMp3Downloader.App/MusicMp3Downloader.App.csproj
 ```
 
-Respuesta (cuando ya terminó):
+## 🔨 Compilación
 
-```json
-{
-  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-  "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-  "status": "completed",
-  "title": "Rick Astley - Never Gonna Give You Up",
-  "duration": 212,
-  "file_size": 3456789,
-  "filename": "dQw4w9WgXcQ.mp3",
-  "error_message": null,
-  "created_at": "2026-06-22 12:00:00+00:00",
-  "updated_at": "2026-06-22 12:00:30+00:00"
-}
-```
-
-### Descargar el archivo MP3
+### Compilación de desarrollo
 
 ```bash
-curl -L "http://localhost:8000/download/a1b2c3d4-e5f6-7890-abcd-ef1234567890/file" -o cancion.mp3
+dotnet build MusicMp3Downloader.slnx --configuration Debug
 ```
 
-### Health check
+### Publicación (ejecutable autónomo)
 
 ```bash
-curl "http://localhost:8000/health"
+# Windows
+dotnet publish core/MusicMp3Downloader.App/MusicMp3Downloader.App.csproj \
+  -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
+
+# macOS (Apple Silicon)
+dotnet publish core/MusicMp3Downloader.App/MusicMp3Downloader.App.csproj \
+  -c Release -r osx-arm64 --self-contained true -p:PublishSingleFile=true
+
+# Linux
+dotnet publish core/MusicMp3Downloader.App/MusicMp3Downloader.App.csproj \
+  -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true
 ```
 
-```json
-{
-  "status": "ok"
-}
+El binario resultante queda en `core/MusicMp3Downloader.App/bin/Release/net10.0/<rid>/publish/`.
+
+## 🧪 Pruebas
+
+```bash
+dotnet test MusicMp3Downloader.slnx
 ```
 
-## 🌐 Interfaz Web
+Los proyectos de pruebas se ubicarán en `test/`. Actualmente no hay suites implementadas.
 
-Además de la API, el proyecto incluye una interfaz web en `http://localhost:8000/` con:
+## 🔄 Integración Continua
 
-- Formulario para pegar URLs de YouTube
-- Lista de descargas recientes con actualización en tiempo real
-- Botón de descarga directa del MP3 cuando finaliza el procesamiento
-- Diseño responsive y moderno (modo oscuro)
+El workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) se ejecuta en cada `push` y `pull_request` sobre `master`:
 
-## 📖 API
-
-| Método | Endpoint              | Descripción                            |
-|--------|-----------------------|----------------------------------------|
-| `POST` | `/download`           | Inicia la descarga de un MP3 desde URL |
-| `GET`  | `/download/{id}`      | Obtiene el estado de una descarga      |
-| `GET`  | `/download/{id}/file`  | Descarga el archivo MP3 resultante     |
-| `GET`  | `/downloads`          | Lista las últimas 20 descargas         |
-| `GET`  | `/health`             | Health check del servicio              |
-
-La documentación completa de la API está disponible en `/docs` (Swagger UI) y `/redoc` (ReDoc).
+| Job       | Descripción                                                                 |
+|-----------|-----------------------------------------------------------------------------|
+| `build`   | Restaura, compila y ejecuta las pruebas en `ubuntu-latest`, `windows-latest` y `macos-latest`. |
+| `format`  | Verifica el estilo del código con `dotnet format --verify-no-changes`.     |
+| `publish` | Solo en `push` a `master`: genera ejecutables self-contained para `linux-x64`, `win-x64` y `osx-arm64` y los sube como artefactos. |
 
 ## 🤝 Contribuciones
 
 Las contribuciones son bienvenidas. Por favor:
 
-1. Haz un fork del proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/nueva-funcionalidad`)
-3. Haz commit de tus cambios (`git commit -m 'feat: agregar nueva funcionalidad'`)
-4. Haz push a la rama (`git push origin feature/nueva-funcionalidad`)
-5. Abre un Pull Request
+1. Haz un fork del proyecto.
+2. Crea una rama para tu feature (`git checkout -b feature/nueva-funcionalidad`).
+3. Ejecuta `dotnet format` y `dotnet test` antes de hacer commit.
+4. Haz commit de tus cambios (`git commit -m 'feat: agregar nueva funcionalidad'`).
+5. Haz push a la rama (`git push origin feature/nueva-funcionalidad`).
+6. Abre un Pull Request.
 
 ## 📄 Licencia
 
