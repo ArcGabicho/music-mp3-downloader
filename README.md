@@ -2,11 +2,11 @@
 
 ![Wallpaper](https://i.imgur.com/2lcUDNj.png)
 
-<img src="https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet" alt=".NET">
-<img src="https://img.shields.io/badge/C%23-13-239120?logo=csharp" alt="C#">
-<img src="https://img.shields.io/badge/Avalonia%20UI-12.1-8B44AC?logo=avalonia" alt="Avalonia UI">
-<img src="https://img.shields.io/badge/cross--platform-Windows%20%7C%20macOS%20%7C%20Linux-informational" alt="Cross-platform">
-<img src="https://img.shields.io/badge/license-MIT-green" alt="License">
+<a href="https://dotnet.microsoft.com/download/dotnet/10.0"><img src="https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet" alt=".NET"></a>
+<a href="https://learn.microsoft.com/dotnet/csharp/whats-new/csharp-13"><img src="https://img.shields.io/badge/C%23-13-239120?logo=csharp" alt="C#"></a>
+<a href="https://avaloniaui.net/"><img src="https://img.shields.io/badge/Avalonia%20UI-12.1-8B44AC?logo=avalonia" alt="Avalonia UI"></a>
+<a href="https://github.com/ArcGabicho/music-mp3-downloader"><img src="https://img.shields.io/badge/cross--platform-Windows%20%7C%20macOS%20%7C%20Linux-informational" alt="Cross-platform"></a>
+<a href="LICENSE.md"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a>
 
 **Music MP3 Downloader** es una aplicación de escritorio multiplataforma construida con **.NET 10** y **Avalonia UI** que permite descargar audio en formato MP3 a partir de URLs de YouTube además reproducirlas en una UI moderna.
 
