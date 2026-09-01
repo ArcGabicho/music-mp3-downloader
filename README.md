@@ -19,7 +19,8 @@ yay -S music-mp3-downloader
 ```
 
 > [!WARNING]
-> Necesitas el helper de AUR `yay` y que existan los paquetes de runtime `yt-dlp` y `ffmpeg` (el comando los instala como dependencias).
+> Necesitas el helper de AUR `yay` y el paquete `vlc` (libvlc) para la reproducción de audio en Linux.
+> `yt-dlp` y `ffmpeg` vienen incluidos en la app; no hay que instalarlos.
 > El comando descarga el `PKGBUILD` del AUR, compila la aplicación y la instala en el sistema, dejando el ejecutable `music-mp3-downloader` en el `PATH`.
 
 #### Instalación en Windows
@@ -29,7 +30,7 @@ iwr https://github.com/ArcGabicho/music-mp3-downloader/releases/latest/download/
 ```
 
 > [!WARNING]
-> Necesitas Windows 10/11 (incluye PowerShell y `iwr`), conexión a internet y tener `yt-dlp` y `ffmpeg` en el `PATH` para que las descargas funcionen.
+> Necesitas Windows 10/11 (incluye PowerShell y `iwr`) y conexión a internet. `yt-dlp` y `ffmpeg` vienen incluidos en la app; no hay que instalar nada aparte.
 > El comando descarga el `.exe` de la última release en la carpeta actual como `MusicMp3Downloader.exe` y lo ejecuta.
 
 ---

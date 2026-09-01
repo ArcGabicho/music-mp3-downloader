@@ -1,0 +1,37 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Color x:Key="BgRight">#0C0C0F</Color>
+    <Color x:Key="Panel">#141418</Color>
+    <Color x:Key="Surface">#1A1A20</Color>
+    <Color x:Key="SurfaceActive">#24242C</Color>
+    <Color x:Key="Hairline">#1E1E25</Color>
+    <Color x:Key="TextPrimary">#F4F4F6</Color>
+    <Color x:Key="TextSecondary">#9C9CA7</Color>
+    <Color x:Key="TextFaint">#5B5B67</Color>
+    <Color x:Key="Accent">#FF2D46</Color>
+
+    <SolidColorBrush x:Key="BgRightBrush" Color="{StaticResource BgRight}" />
+    <SolidColorBrush x:Key="PanelBrush" Color="{StaticResource Panel}" />
+    <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource Surface}" />
+    <SolidColorBrush x:Key="SurfaceActiveBrush" Color="{StaticResource SurfaceActive}" />
+    <SolidColorBrush x:Key="HairlineBrush" Color="{StaticResource Hairline}" />
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimary}" />
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondary}" />
+    <SolidColorBrush x:Key="TextFaintBrush" Color="{StaticResource TextFaint}" />
+    <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource Accent}" />
+    <SolidColorBrush x:Key="ScrimBrush" Color="#D8070708" />
+    <SolidColorBrush x:Key="IconOutlineBrush" Color="#30FFFFFF" />
+
+    <LinearGradientBrush x:Key="ArtworkGradient" StartPoint="0%,0%" EndPoint="100%,100%">
+        <GradientStop Offset="0" Color="#FF3145" />
+        <GradientStop Offset="0.5" Color="#7A2A82" />
+        <GradientStop Offset="1" Color="#2438E8" />
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="ArtworkScrim" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Offset="0" Color="#59000000" />
+        <GradientStop Offset="0.4" Color="#14000000" />
+        <GradientStop Offset="1" Color="#E4000000" />
+    </LinearGradientBrush>
+
+</ResourceDictionary>

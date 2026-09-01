@@ -3,7 +3,6 @@ using System.IO;
 
 namespace MusicMp3Downloader.App.Services;
 
-/// <inheritdoc />
 public sealed class MusicLibrary : IMusicLibrary
 {
     public string GetMusicDirectory()
@@ -33,7 +32,7 @@ public sealed class MusicLibrary : IMusicLibrary
         var fromEnv = Environment.GetEnvironmentVariable("XDG_MUSIC_DIR");
         if (!string.IsNullOrEmpty(fromEnv))
         {
-            return Expand(fromEnv, home);
+            return ExpandHome(fromEnv, home);
         }
 
         var fromConfig = ReadXdgUserDirs(home);
@@ -55,7 +54,6 @@ public sealed class MusicLibrary : IMusicLibrary
         return Path.Combine(home, "Music");
     }
 
-    /// <summary>Lee <c>XDG_MUSIC_DIR</c> de <c>~/.config/user-dirs.dirs</c>.</summary>
     private static string? ReadXdgUserDirs(string home)
     {
         var configHome = Environment.GetEnvironmentVariable("XDG_CONFIG_HOME");
@@ -65,12 +63,13 @@ public sealed class MusicLibrary : IMusicLibrary
         }
 
         var file = Path.Combine(configHome, "user-dirs.dirs");
-        if (!File.Exists(file))
-        {
-            return null;
-        }
+        return File.Exists(file) ? ParseXdgUserDirs(File.ReadAllText(file), home) : null;
+    }
 
-        foreach (var raw in File.ReadAllLines(file))
+    /// <summary>Extrae <c>XDG_MUSIC_DIR</c> del contenido de un <c>user-dirs.dirs</c>.</summary>
+    internal static string? ParseXdgUserDirs(string content, string home)
+    {
+        foreach (var raw in content.Split('\n'))
         {
             var line = raw.Trim();
             if (line.StartsWith('#') || !line.StartsWith("XDG_MUSIC_DIR=", StringComparison.Ordinal))
@@ -79,13 +78,13 @@ public sealed class MusicLibrary : IMusicLibrary
             }
 
             var value = line["XDG_MUSIC_DIR=".Length..].Trim().Trim('"');
-            return value.Length == 0 ? null : Expand(value, home);
+            return value.Length == 0 ? null : ExpandHome(value, home);
         }
 
         return null;
     }
 
-    private static string Expand(string value, string home)
+    internal static string ExpandHome(string value, string home)
     {
         if (value == "$HOME")
         {

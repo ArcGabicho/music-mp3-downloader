@@ -15,21 +15,19 @@ using MusicMp3Downloader.App.Models;
 
 namespace MusicMp3Downloader.App.Services;
 
-/// <summary>
-/// Orquesta la descarga: yt-dlp descarga el vídeo, extrae el audio y lo convierte a MP3
-/// dentro de la carpeta de música del usuario; después se guardan solo los metadatos de
-/// la descarga en la base de datos SQLite (el archivo MP3 nunca se guarda en la base).
-/// </summary>
 public sealed partial class DownloadService : IDownloadService
 {
     private readonly IMusicLibrary _musicLibrary;
+    private readonly IExternalTools _tools;
     private readonly IDbContextFactory<AppDbContext> _dbFactory;
 
     public DownloadService(
         IMusicLibrary musicLibrary,
+        IExternalTools tools,
         IDbContextFactory<AppDbContext> dbFactory)
     {
         _musicLibrary = musicLibrary;
+        _tools = tools;
         _dbFactory = dbFactory;
     }
 
@@ -47,8 +45,8 @@ public sealed partial class DownloadService : IDownloadService
             Status = DownloadStatus.Downloading,
         };
 
-        string[] arguments =
-        [
+        var arguments = new List<string>
+        {
             "--no-playlist",
             "--extract-audio",
             "--audio-format", "mp3",
@@ -60,10 +58,17 @@ public sealed partial class DownloadService : IDownloadService
             "--print", "after_move:filepath",
             "--output", outputTemplate,
             url,
-        ];
+        };
+
+        // Usa el FFmpeg empaquetado si está disponible, en vez del del sistema.
+        if (_tools.FfmpegDirectory is { } ffmpegDirectory)
+        {
+            arguments.Insert(0, ffmpegDirectory);
+            arguments.Insert(0, "--ffmpeg-location");
+        }
 
         string? filePath = null;
-        await foreach (var line in RunYtDlpAsync(arguments, cancellationToken))
+        await foreach (var line in RunYtDlpAsync(_tools.YtDlpPath, arguments, cancellationToken))
         {
             var match = ProgressRegex().Match(line);
             if (match.Success &&
@@ -98,7 +103,6 @@ public sealed partial class DownloadService : IDownloadService
         return item;
     }
 
-    /// <summary>Guarda solo los metadatos de la descarga en SQLite.</summary>
     private async Task PersistAsync(DownloadItem item, CancellationToken cancellationToken)
     {
         await using var db = await _dbFactory.CreateDbContextAsync(cancellationToken);
@@ -137,10 +141,11 @@ public sealed partial class DownloadService : IDownloadService
     }
 
     private static async IAsyncEnumerable<string> RunYtDlpAsync(
+        string ytDlpPath,
         IReadOnlyList<string> arguments,
         [EnumeratorCancellation] CancellationToken cancellationToken)
     {
-        var startInfo = new ProcessStartInfo("yt-dlp")
+        var startInfo = new ProcessStartInfo(ytDlpPath)
         {
             RedirectStandardOutput = true,
             RedirectStandardError = true,
@@ -162,7 +167,8 @@ public sealed partial class DownloadService : IDownloadService
         catch (Win32Exception ex)
         {
             throw new InvalidOperationException(
-                "No se encontró 'yt-dlp'. Instálalo y asegúrate de que está en el PATH.", ex);
+                "No se encontró yt-dlp. El binario se descarga durante la compilación; " +
+                "ejecuta 'dotnet build' o 'bash core/Tools/fetch-tools.sh <rid>'.", ex);
         }
 
         var errorBuffer = new StringBuilder();

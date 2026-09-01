@@ -104,7 +104,7 @@ binarios se sobrescriben con `--clobber`.
 | `release` falla con `HTTP 403`                     | Falta `permissions: contents: write` o el repo restringe el `GITHUB_TOKEN`. |
 | `gh release create` falla con `tag already exists` sin release | Borra el tag remoto y vuelve a empujarlo, o crea el release manualmente. |
 | Un RID de macOS no compila                          | `macos-13` (Intel) puede quedar deprecado; migra a `macos-14`/`macos-15` con `-r osx-x64`. |
-| El binario arranca pero la descarga falla           | Faltan `yt-dlp` y/o FFmpeg en la máquina destino; son dependencias de runtime, no se empaquetan. |
+| El binario arranca pero la descarga falla           | El paso de publicación no llegó a descargar yt-dlp/FFmpeg (sin red en el runner); revisa el log del target `FetchExternalTools`. Se empaquetan en `tools/` junto al ejecutable. |
 
 ---
 

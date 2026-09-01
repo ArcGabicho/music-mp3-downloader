@@ -50,8 +50,12 @@ public partial class App : Application
 
         services.AddSingleton<IAudioTagger, TagLibAudioTagger>();
         services.AddSingleton<IMusicLibrary, MusicLibrary>();
+        services.AddSingleton<ILibraryService, LibraryService>();
+        services.AddSingleton<IAudioPlayer, LibVlcAudioPlayer>();
+        services.AddSingleton<IExternalTools, ExternalTools>();
         services.AddSingleton<IDownloadService, DownloadService>();
 
+        services.AddSingleton<PlayerViewModel>();
         services.AddSingleton<MainWindowViewModel>();
     }
 }

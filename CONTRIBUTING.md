@@ -6,22 +6,13 @@ el flujo de trabajo, los estándares de código y qué se espera de una Pull Req
 ## Requisitos previos
 
 - [.NET SDK 10.0+](https://dotnet.microsoft.com/download/dotnet/10.0)
-- [yt-dlp](https://github.com/yt-dlp/yt-dlp) y [FFmpeg](https://ffmpeg.org/) en el `PATH` (dependencias de runtime para descargar y convertir a MP3)
 - Git
+- **Linux:** `libvlc` para la reproducción de audio — `sudo pacman -S vlc` / `sudo apt install vlc`. En Windows y macOS llega por NuGet.
 
-```bash
-# Linux (Debian/Ubuntu)
-sudo apt install ffmpeg yt-dlp
-
-# Linux (Arch/CachyOS)
-sudo pacman -S ffmpeg yt-dlp
-
-# macOS
-brew install ffmpeg yt-dlp
-
-# Windows
-winget install ffmpeg yt-dlp
-```
+`yt-dlp` y `FFmpeg` **no** hace falta instalarlos: el build los descarga como binarios
+autónomos en `core/Tools/<rid>/` (ver [`core/Tools/README.md`](core/Tools/README.md)).
+La primera compilación necesita conexión; para compilar sin red usa
+`dotnet build -p:BundleExternalTools=false`.
 
 Editor recomendado: Visual Studio 2022+, JetBrains Rider o VS Code con el SDK de C#.
 Para la vista previa de Avalonia instala la extensión oficial de Avalonia.
@@ -98,8 +89,9 @@ subas releases a mano. Ver [Guía de CI/CD](docs/ci-guide.md).
 dotnet test MusicMp3Downloader.slnx
 ```
 
-Los proyectos de pruebas se ubican en `test/`. Todavía no hay suites implementadas;
-añade pruebas junto con cualquier lógica no trivial que aportes.
+Las pruebas (xUnit) están en `test/`. Los ViewModels se
+prueban con fakes (`Fakes/FakeAudioPlayer.cs`); la lógica pura testeable se expone como
+`internal` + `InternalsVisibleTo`. Añade pruebas junto con cualquier lógica no trivial.
 
 ## Integración continua
 

@@ -8,8 +8,49 @@
     <AssemblyName>MusicMp3Downloader.App</AssemblyName>
   </PropertyGroup>
 
+  <!-- ============ Herramientas externas empaquetadas (yt-dlp + ffmpeg) ============ -->
+  <PropertyGroup>
+    <BundleExternalTools Condition="'$(BundleExternalTools)' == ''">true</BundleExternalTools>
+    <ExternalToolsRid>$(RuntimeIdentifier)</ExternalToolsRid>
+    <ExternalToolsRid Condition="'$(ExternalToolsRid)' == '' and $([MSBuild]::IsOSPlatform('Windows'))">win-x64</ExternalToolsRid>
+    <ExternalToolsRid Condition="'$(ExternalToolsRid)' == '' and $([MSBuild]::IsOSPlatform('OSX'))">osx-x64</ExternalToolsRid>
+    <ExternalToolsRid Condition="'$(ExternalToolsRid)' == ''">linux-x64</ExternalToolsRid>
+    <ExternalToolsSourceRoot>$(MSBuildProjectDirectory)/Tools</ExternalToolsSourceRoot>
+    <ExternalToolsDir>$(ExternalToolsSourceRoot)/$(ExternalToolsRid)</ExternalToolsDir>
+  </PropertyGroup>
+
+  <Target Name="FetchExternalTools"
+          BeforeTargets="Build;Publish"
+          Condition="'$(BundleExternalTools)' == 'true'">
+    <Exec Condition="!$([MSBuild]::IsOSPlatform('Windows')) and !Exists('$(ExternalToolsDir)/yt-dlp')"
+          Command="bash &quot;$(ExternalToolsSourceRoot)/fetch-tools.sh&quot; $(ExternalToolsRid)"
+          ContinueOnError="WarnAndContinue" />
+    <Exec Condition="$([MSBuild]::IsOSPlatform('Windows')) and !Exists('$(ExternalToolsDir)/yt-dlp.exe')"
+          Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(ExternalToolsSourceRoot)\fetch-tools.ps1&quot; -Rid $(ExternalToolsRid)"
+          ContinueOnError="WarnAndContinue" />
+  </Target>
+
+  <Target Name="CopyExternalToolsToOutput" AfterTargets="Build" DependsOnTargets="FetchExternalTools" Condition="'$(BundleExternalTools)' == 'true' and Exists('$(ExternalToolsDir)')">
+    <ItemGroup>
+      <_ExternalToolFile Include="$(ExternalToolsDir)/*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_ExternalToolFile)" DestinationFolder="$(OutDir)tools"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="CopyExternalToolsToPublish"
+          AfterTargets="Publish"
+          Condition="'$(BundleExternalTools)' == 'true' and Exists('$(ExternalToolsDir)')">
+    <ItemGroup>
+      <_ExternalToolFile Include="$(ExternalToolsDir)/*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_ExternalToolFile)" DestinationFolder="$(PublishDir)tools"
+          SkipUnchangedFiles="true" />
+  </Target>
+
   <ItemGroup>
     <AvaloniaResource Include="Assets/**" />
+    <InternalsVisibleTo Include="MusicMp3Downloader.App.Tests" />
   </ItemGroup>
 
   <ItemGroup>
@@ -17,10 +58,7 @@
     <PackageReference Include="Avalonia.Desktop" Version="12.1.1" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.1" />
     <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.1" />
-    <PackageReference Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.3">
-      <IncludeAssets Condition="'$(Configuration)' != 'Debug'">None</IncludeAssets>
-      <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
-    </PackageReference>
+    <PackageReference Include="AvaloniaUI.DiagnosticsSupport" Version="2.2.3" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.11">
@@ -29,5 +67,8 @@
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.11" />
     <PackageReference Include="TagLibSharp" Version="2.3.0" />
+    <PackageReference Include="LibVLCSharp" Version="3.8.5" />
+    <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.21" Condition="('$(RuntimeIdentifier)' == '' and $([MSBuild]::IsOSPlatform('Windows'))) or $(RuntimeIdentifier.StartsWith('win'))" />
+    <PackageReference Include="VideoLAN.LibVLC.Mac" Version="3.0.21" Condition="('$(RuntimeIdentifier)' == '' and $([MSBuild]::IsOSPlatform('OSX'))) or $(RuntimeIdentifier.StartsWith('osx'))" />
   </ItemGroup>
 </Project>
