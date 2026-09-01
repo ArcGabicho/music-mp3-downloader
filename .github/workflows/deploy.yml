@@ -75,6 +75,21 @@ jobs:
           Compress-Archive -Path ./artifacts/${{ matrix.rid }}/*
           -DestinationPath "MusicMp3Downloader-${{ steps.version.outputs.number }}-${{ matrix.rid }}.zip"
 
+      - name: Build Windows installer (Inno Setup)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $iscc = (Get-Command iscc -ErrorAction SilentlyContinue).Source
+          if (-not $iscc) { $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" }
+          & $iscc `
+            /DMyAppVersion=${{ steps.version.outputs.number }} `
+            /DSourceDir=${{ github.workspace }}\artifacts\${{ matrix.rid }} `
+            /DOutputDir=${{ github.workspace }} `
+            packaging\windows\installer.iss
+          Copy-Item `
+            "MusicMp3Downloader-Setup-${{ steps.version.outputs.number }}-x64.exe" `
+            "MusicMp3Downloader-Setup-x64.exe"
+
       - name: Upload package
         uses: actions/upload-artifact@v4
         with:

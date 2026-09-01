@@ -107,7 +107,8 @@ music-mp3-downloader/
 │   ├── Data/                            # AppDbContext (EF Core) y entidades persistidas
 │   └── Tools/                           # fetch-tools.{sh,ps1} + binarios yt-dlp/ffmpeg (descargados, no versionados)
 ├── docs/                                # Documentación
-├── test/   # xUnit (ViewModels con fakes + lógica pura)
+├── test/                                # xUnit (ViewModels con fakes + lógica pura)
+├── packaging/                           # windows/installer.iss (Inno Setup) + aur/ (PKGBUILD, .desktop)
 ├── .github/workflows/                   # ci.yml (integración) y deploy.yml (publicación)
 └── README.md
 ```

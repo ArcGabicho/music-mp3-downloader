@@ -12,7 +12,9 @@ además, descarga audio de YouTube a MP3 **100 % en local**. Sin servidor, sin n
 ```
 MusicMp3Downloader.slnx          # solución (formato XML .slnx)
 core/                            # el proyecto de la app (MusicMp3Downloader.App.csproj)
-test/   # xUnit
+test/                            # xUnit
+packaging/windows/installer.iss  # Inno Setup (lo compila deploy.yml)
+packaging/aur/                   # PKGBUILD + .desktop de referencia para el AUR
 docs/app-overview.md             # perfil completo del proyecto
 docs/ci-guide.md                 # workflows de GitHub Actions
 CONTRIBUTING.md                  # flujo de contribución

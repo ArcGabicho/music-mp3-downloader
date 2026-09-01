@@ -66,7 +66,14 @@ Pasos:
    - `tar.gz` en Linux y macOS.
    - `zip` en Windows (vía PowerShell `Compress-Archive`).
    Nombre: `MusicMp3Downloader-<number>-<rid>.(tar.gz|zip)`.
-6. **Upload package** — sube el archivo como artifact `package-<rid>` (`if-no-files-found: error`).
+6. **Build Windows installer** (solo Windows) — `iscc` (Inno Setup 6, preinstalado en el
+   runner) compila `packaging/windows/installer.iss` sobre `artifacts/win-x64` y produce
+   `MusicMp3Downloader-Setup-<number>-x64.exe`; se copia también como
+   `MusicMp3Downloader-Setup-x64.exe` (nombre estable para `releases/latest/download/…`).
+   Instalación por usuario (`{localappdata}\Programs`), sin admin, con accesos directos y
+   desinstalador. Sin firma de código (SmartScreen avisa).
+7. **Upload package** — sube todo lo que empiece por `MusicMp3Downloader-*` como artifact
+   `package-<rid>` (`if-no-files-found: error`).
 
 ### Job `release`
 
@@ -90,7 +97,8 @@ git tag v1.2.3
 git push origin v1.2.3
 
 # 3. Sigue el progreso en la pestaña Actions.
-#    Al terminar, el Release aparece en la pestaña Releases con 4 binarios adjuntos.
+#    Al terminar, el Release lleva adjuntos: los .tar.gz/.zip por plataforma, el
+#    instalador de Windows versionado y su copia de nombre estable Setup-x64.exe.
 ```
 
 Para re-publicar la misma versión (por ejemplo, si un binario salió mal), vuelve a

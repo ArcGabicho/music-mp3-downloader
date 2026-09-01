@@ -12,26 +12,27 @@
 
 ---
 
-#### Instalación en Arch Linux / CachyOS:
+#### Instalación en Arch Linux / CachyOS
 
 ```bash
-yay -S music-mp3-downloader
+yay -S music-mp3-downloader-bin
 ```
 
 > [!WARNING]
-> Necesitas el helper de AUR `yay` y el paquete `vlc` (libvlc) para la reproducción de audio en Linux.
+> Necesitas el helper de AUR `yay` y el paquete `vlc` (libvlc) para la reproducción de audio.
 > `yt-dlp` y `ffmpeg` vienen incluidos en la app; no hay que instalarlos.
-> El comando descarga el `PKGBUILD` del AUR, compila la aplicación y la instala en el sistema, dejando el ejecutable `music-mp3-downloader` en el `PATH`.
+> El paquete descarga el binario ya compilado de la última release de GitHub y lo instala,
+> dejando el ejecutable `music-mp3-downloader` en el `PATH` y una entrada en el menú.
 
 #### Instalación en Windows
 
 ```powershell
-iwr https://github.com/ArcGabicho/music-mp3-downloader/releases/latest/download/MusicMp3Downloader-win-x64.exe -OutFile MusicMp3Downloader.exe; .\MusicMp3Downloader.exe
+iwr https://github.com/ArcGabicho/music-mp3-downloader/releases/latest/download/MusicMp3Downloader-Setup-x64.exe -OutFile MusicMp3Downloader-Setup.exe; .\MusicMp3Downloader-Setup.exe
 ```
 
 > [!WARNING]
-> Necesitas Windows 10/11 (incluye PowerShell y `iwr`) y conexión a internet. `yt-dlp` y `ffmpeg` vienen incluidos en la app; no hay que instalar nada aparte.
-> El comando descarga el `.exe` de la última release en la carpeta actual como `MusicMp3Downloader.exe` y lo ejecuta.
+> Necesitas Windows 10/11 (incluye PowerShell y `iwr`) y conexión a internet. `yt-dlp` y `ffmpeg` vienen incluidos; no hay que instalar nada aparte.
+> El comando descarga el instalador de la última release y lo ejecuta (instalación por usuario, sin permisos de administrador). Como el ejecutable no está firmado, SmartScreen puede avisar: **Más información → Ejecutar de todas formas**.
 
 ---
 
