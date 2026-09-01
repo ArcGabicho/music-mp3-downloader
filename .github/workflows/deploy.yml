@@ -30,8 +30,6 @@ jobs:
             runner: ubuntu-latest
           - rid: win-x64
             runner: windows-latest
-          - rid: osx-x64
-            runner: macos-13
           - rid: osx-arm64
             runner: macos-latest
 
