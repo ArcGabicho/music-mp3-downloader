@@ -1,0 +1,20 @@
+pkgbase = music-mp3-downloader-bin
+	pkgdesc = Reproductor de música de escritorio que descarga audio de YouTube a MP3, 100% local
+	pkgver = 0.1.0
+	pkgrel = 1
+	url = https://github.com/ArcGabicho/music-mp3-downloader
+	arch = x86_64
+	license = MIT
+	depends = vlc
+	depends = icu
+	provides = music-mp3-downloader
+	conflicts = music-mp3-downloader
+	options = !strip
+	source = music-mp3-downloader-0.1.0.tar.gz::https://github.com/ArcGabicho/music-mp3-downloader/releases/download/v0.1.0/MusicMp3Downloader-0.1.0-linux-x64.tar.gz
+	source = music-mp3-downloader.desktop
+	source = LICENSE-0.1.0::https://raw.githubusercontent.com/ArcGabicho/music-mp3-downloader/v0.1.0/LICENSE.md
+	sha256sums = e8e2f6365b1f88c8bd14c8a5bea66d1e693e1ac5460a31d5fa31a8a86a80b131
+	sha256sums = 7308aaed459c09f678f04851c8dd3a828bfbd1474145ef8cde1970396ff1470f
+	sha256sums = feaae75855ad94179f96699264b7302f54e1e4636a9d96b5aeaf55d6fb2cabee
+
+pkgname = music-mp3-downloader-bin
