@@ -18,7 +18,8 @@
     <Grid RowDefinitions="Auto,*,Auto">
 
         <!-- ============ TARJETA "REPRODUCIENDO AHORA" ============ -->
-        <Grid Grid.Row="0" Padding="24,20,24,16" ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="14">
+        <Grid Grid.Row="0" Padding="24,20,24,16" ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="14"
+              MaximumWidthRequest="860" HorizontalOptions="Fill">
             <Border Grid.Column="0" StyleClass="avatarFrame">
                 <Grid>
                     <Ellipse Fill="{StaticResource Hairline}" WidthRequest="14" HeightRequest="14"
@@ -59,7 +60,9 @@
 
         <!-- ============ LISTA DE PISTAS ============ -->
         <Grid Grid.Row="1">
-            <CollectionView Margin="12,8,12,8" ItemsSource="{Binding Tracks}" SelectionMode="None">
+            <CollectionView Margin="12,8,12,8" ItemsSource="{Binding Tracks}" SelectionMode="None"
+                            MaximumWidthRequest="860" HorizontalOptions="Center"
+                            IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBool}}">
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="vm:TrackViewModel">
                         <Border StyleClass="trackRow" HeightRequest="46">
@@ -95,7 +98,7 @@
         <Grid Grid.Row="2" HeightRequest="86" BackgroundColor="{StaticResource Panel}">
             <BoxView Color="{StaticResource Hairline}" HeightRequest="1" VerticalOptions="Start" />
             <Grid Padding="24,0" ColumnDefinitions="Auto,Auto,Auto,Auto,*,Auto,Auto" ColumnSpacing="12"
-                  VerticalOptions="Center">
+                  MaximumWidthRequest="860" HorizontalOptions="Fill" VerticalOptions="Center">
                 <Border Grid.Column="0" StyleClass="transport">
                     <Path Data="M0,0 L2.5,0 L2.5,14 L0,14 Z M13,0 L3,7 L13,14 Z"
                           Fill="{StaticResource TextPrimaryBrush}"
@@ -131,7 +134,7 @@
                 </Border>
 
                 <Label Grid.Column="3" Text="{Binding Player.PositionText}" StyleClass="rowTime"
-                       WidthRequest="34" HorizontalTextAlignment="End" />
+                       MinimumWidthRequest="34" HorizontalTextAlignment="End" />
 
                 <Slider x:Name="SeekSlider" Grid.Column="4" VerticalOptions="Center"
                         Minimum="0" Maximum="1" Value="{Binding Player.Progress}"
@@ -141,7 +144,7 @@
                         ThumbColor="{StaticResource ProgressAccent}" />
 
                 <Label Grid.Column="5" Text="{Binding Player.DurationText}" StyleClass="rowTime"
-                       WidthRequest="34" />
+                       MinimumWidthRequest="34" />
 
                 <Border Grid.Column="6" StyleClass="transport" WidthRequest="34" HeightRequest="34">
                     <Grid WidthRequest="18" HeightRequest="16">
@@ -190,7 +193,7 @@
                                Text="{Binding DownloadUrl}"
                                ReturnCommand="{Binding DownloadCommand}" />
                         <Button Grid.Column="1" StyleClass="pill" Text="Descargar" Margin="10,0,0,0"
-                                Command="{Binding DownloadCommand}" />
+                                HeightRequest="42" Command="{Binding DownloadCommand}" />
                     </Grid>
 
                     <Label Grid.Row="2" Text="{Binding DownloadStatus}" StyleClass="rowTime" Margin="2,12,0,0" />
