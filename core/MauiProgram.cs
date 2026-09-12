@@ -17,6 +17,7 @@ public static class MauiProgram
     {
         var builder = MauiApp.CreateBuilder();
         builder.UseMauiApp<App>();
+        Plugin.Maui.Audio.MauiAppBuilderExtensions.AddAudio(builder);
 
         ConfigureServices(builder.Services);
 
@@ -35,7 +36,6 @@ public static class MauiProgram
         services.AddDbContextFactory<AppDbContext>(options =>
             options.UseSqlite($"Data Source={Path.Combine(dataDir, "app.db")}"));
 
-        services.AddSingleton(Plugin.Maui.Audio.AudioManager.Current);
         services.AddSingleton<IAudioTagger, TagLibAudioTagger>();
         services.AddSingleton<IMusicLibrary, MusicLibrary>();
         services.AddSingleton<ILibraryService, LibraryService>();

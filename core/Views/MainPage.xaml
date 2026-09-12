@@ -113,10 +113,9 @@
             </CollectionView>
 
             <!-- Barra de reproducción -->
-            <Border Grid.Row="3" BackgroundColor="{StaticResource Panel}"
-                    Stroke="{StaticResource HairlineBrush}" StrokeThickness="1,0,0,0"
-                    Padding="30,0" HeightRequest="94">
-                <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto" VerticalOptions="Center">
+            <Grid Grid.Row="3" HeightRequest="94" BackgroundColor="{StaticResource Panel}">
+                <BoxView Color="{StaticResource Hairline}" HeightRequest="1" VerticalOptions="Start" />
+                <Grid Padding="30,0" ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto" VerticalOptions="Center">
 
                     <Label Grid.Row="0" Grid.Column="1" StyleClass="nowLabel" Margin="20,0,20,8"
                            Text="{Binding Player.NowPlayingLabel, FallbackValue='SIN REPRODUCCIÓN'}" />
@@ -181,7 +180,7 @@
                                 Value="{Binding Player.Volume}" />
                     </HorizontalStackLayout>
                 </Grid>
-            </Border>
+            </Grid>
         </Grid>
 
         <!-- ============ OVERLAY DESCARGA ============ -->
@@ -227,10 +226,12 @@
                                 <Border StyleClass="downloadCard" Margin="0,0,0,10">
                                     <VerticalStackLayout Spacing="7">
                                         <Label Text="{Binding Title}" StyleClass="rowTitle" />
-                                        <HorizontalStackLayout Spacing="10" IsVisible="{Binding IsInProgress}">
-                                            <Label Text="{Binding StatusLabel}" StyleClass="rowTime" />
-                                            <ProgressBar WidthRequest="280" Progress="{Binding Progress}" />
-                                        </HorizontalStackLayout>
+                                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10" IsVisible="{Binding IsInProgress}">
+                                            <Label Grid.Column="0" Text="{Binding StatusLabel}" StyleClass="rowTime"
+                                                   VerticalOptions="Center" />
+                                            <ProgressBar Grid.Column="1" Progress="{Binding Progress}"
+                                                         VerticalOptions="Center" />
+                                        </Grid>
                                         <Label Text="{Binding StatusLabel}" StyleClass="rowTime"
                                                IsVisible="{Binding IsInProgress, Converter={StaticResource InvertedBool}}" />
                                         <Label Text="{Binding ErrorMessage}" LineBreakMode="WordWrap"
