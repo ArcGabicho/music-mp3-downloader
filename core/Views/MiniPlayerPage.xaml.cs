@@ -4,26 +4,13 @@ using MusicMp3Downloader.App.ViewModels;
 
 namespace MusicMp3Downloader.App.Views;
 
-public partial class MainPage : ContentPage
+public partial class MiniPlayerPage : ContentPage
 {
-#if WINDOWS
-    public MainPage(MainWindowViewModel viewModel, TrayIconView trayIconView)
-    {
-        InitializeComponent();
-        BindingContext = viewModel;
-
-        if (Content is Layout root)
-        {
-            root.Children.Add(trayIconView);
-        }
-    }
-#else
-    public MainPage(MainWindowViewModel viewModel)
+    public MiniPlayerPage(MainWindowViewModel viewModel)
     {
         InitializeComponent();
         BindingContext = viewModel;
     }
-#endif
 
     private void OnSeekDragStarted(object? sender, EventArgs e)
     {

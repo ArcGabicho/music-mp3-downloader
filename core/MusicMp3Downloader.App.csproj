@@ -89,6 +89,7 @@
   <ItemGroup>
     <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#0C0C0F" />
     <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#0C0C0F" BaseSize="128,128" />
+    <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>
@@ -96,6 +97,25 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="Plugin.Maui.Audio" Version="4.0.0" />
+  </ItemGroup>
+
+  <!-- Ícono de bandeja del sistema: solo Windows (Mac Catalyst no tiene "bandeja",
+       usa un paradigma distinto — ítem de la barra de menú — fuera de alcance). -->
+  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+    <PackageReference Include="H.NotifyIcon.Maui" Version="2.4.1" />
+  </ItemGroup>
+
+  <!-- TrayIconView es una vista de MAUI (usa H.NotifyIcon.Maui), no de WinUI, así que NO
+       puede vivir bajo Platforms/Windows/: el SDK de MAUI quita incondicionalmente todo
+       .xaml bajo esa carpeta del item MauiXaml (asume que es XAML nativo de WinUI para
+       XamlCompiler.exe, como App.xaml) — si se la deja ahí, XamlCompiler.exe intenta
+       compilarla y falla en silencio (exit code 1, sin mensaje). Por eso vive en Views/
+       junto al resto de páginas MAUI, y se excluye del build en Mac Catalyst aquí en vez
+       de por ubicación de carpeta, ya que depende de H.NotifyIcon (solo Windows). -->
+  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) != 'windows'">
+    <MauiXaml Remove="Views\TrayIconView.xaml" />
+    <Compile Remove="Views\TrayIconView.xaml.cs" />
+    <None Include="Views\TrayIconView.xaml" />
   </ItemGroup>
 
   <ItemGroup>
