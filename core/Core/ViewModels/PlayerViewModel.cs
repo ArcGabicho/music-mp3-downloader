@@ -36,9 +36,6 @@ public partial class PlayerViewModel : ViewModelBase
     private bool _isMuted;
 
     [ObservableProperty]
-    private int _seed;
-
-    [ObservableProperty]
     private bool _isScrubbing;
 
     [ObservableProperty]
@@ -93,7 +90,6 @@ public partial class PlayerViewModel : ViewModelBase
         StatusMessage = null;
         Current = track;
         track.IsPlaying = true;
-        Seed = track.Seed;
         IsPlaying = true;
         RaiseNowPlaying();
     }
@@ -163,8 +159,8 @@ public partial class PlayerViewModel : ViewModelBase
             _player.Seek(TimeSpan.FromSeconds(duration.TotalSeconds * fraction));
         }
 
-        // Refleja de inmediato la posición pedida para que la onda no dé un salto
-        // hasta que el reproductor reporte la nueva posición.
+        // Refleja de inmediato la posición pedida en la barra, hasta que el
+        // reproductor confirme la nueva posición real.
         Progress = fraction;
     }
 
