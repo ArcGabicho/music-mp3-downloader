@@ -19,6 +19,11 @@
     <!-- Sin empaquetar: publicación como carpeta autónoma, sin MSIX. -->
     <WindowsPackageType>None</WindowsPackageType>
 
+    <!-- Permite restaurar/compilar el TFM net10.0-windows... en hosts no Windows
+         (p. ej. el runner macos-latest de la CI, que solo compila net10.0-maccatalyst
+         pero igual necesita resolver todos los TFM del proyecto). -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
     <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
