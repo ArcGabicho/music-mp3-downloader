@@ -24,21 +24,21 @@ public class TrackViewModelTests
     public void IndexLabel_uses_position_when_no_track_number()
     {
         var vm = new TrackViewModel(Sample(), position: 7);
-        Assert.Equal("7", vm.IndexLabel);
+        Assert.Equal("07", vm.IndexLabel);
     }
 
     [Fact]
     public void IndexLabel_uses_track_number_when_present()
     {
         var vm = new TrackViewModel(Sample(track: 4), position: 7);
-        Assert.Equal("4", vm.IndexLabel);
+        Assert.Equal("04", vm.IndexLabel);
     }
 
     [Fact]
     public void IndexLabel_includes_disc_when_present()
     {
         var vm = new TrackViewModel(Sample(track: 3, disc: 2), position: 7);
-        Assert.Equal("2-3", vm.IndexLabel);
+        Assert.Equal("2-03", vm.IndexLabel);
     }
 
     [Theory]

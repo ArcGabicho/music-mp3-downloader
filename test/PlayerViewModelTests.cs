@@ -124,7 +124,7 @@ public class PlayerViewModelTests
     }
 
     [Fact]
-    public void Header_and_title_reflect_the_current_track()
+    public void NowPlaying_title_and_subtitle_reflect_the_current_track()
     {
         var vm = new PlayerViewModel(new FakeAudioPlayer(), new ImmediateUiDispatcher());
         var tracks = new List<TrackViewModel>
@@ -134,8 +134,7 @@ public class PlayerViewModelTests
         vm.SetQueue(tracks);
         vm.Play(tracks[0]);
 
-        Assert.Equal("ADELE", vm.HeaderArtist);
-        Assert.Equal("2015", vm.HeaderYear);
-        Assert.Equal("01–HELLO", vm.BigTitle);
+        Assert.Equal("Hello", vm.NowPlayingTitle);
+        Assert.Equal("Adele · MP3", vm.NowPlayingSubtitle);
     }
 }

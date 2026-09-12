@@ -62,17 +62,9 @@ public partial class PlayerViewModel : ViewModelBase
 
     public bool IsAvailable => _player.IsAvailable;
 
-    public string HeaderArtist => Current?.Artist.ToUpperInvariant() ?? "BIBLIOTECA LOCAL";
+    public string NowPlayingTitle => Current?.Title ?? "Sin reproducción";
 
-    public string HeaderYear => Current is { Year: > 0 } ? Current.Year.ToString() : string.Empty;
-
-    public string BigTitle => Current is null
-        ? "BIBLIOTECA"
-        : $"{IndexOf(Current) + 1:00}–{Current.Title.ToUpperInvariant()}";
-
-    public string? NowPlayingLabel => Current is null
-        ? null
-        : $"{Current.IndexLabel}   {Current.Title.ToUpperInvariant()}";
+    public string? NowPlayingSubtitle => Current?.SubtitleLine;
 
     public void SetQueue(IReadOnlyList<TrackViewModel> queue) => _queue = queue;
 
@@ -195,10 +187,8 @@ public partial class PlayerViewModel : ViewModelBase
 
     private void RaiseNowPlaying()
     {
-        OnPropertyChanged(nameof(HeaderArtist));
-        OnPropertyChanged(nameof(HeaderYear));
-        OnPropertyChanged(nameof(BigTitle));
-        OnPropertyChanged(nameof(NowPlayingLabel));
+        OnPropertyChanged(nameof(NowPlayingTitle));
+        OnPropertyChanged(nameof(NowPlayingSubtitle));
     }
 
     private void Tick()

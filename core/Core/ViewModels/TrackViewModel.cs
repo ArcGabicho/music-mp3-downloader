@@ -39,13 +39,17 @@ public partial class TrackViewModel : ViewModelBase
         get
         {
             var number = _track.TrackNumber > 0 ? _track.TrackNumber : (uint)Position;
-            return _track.DiscNumber > 0 ? $"{_track.DiscNumber}-{number}" : number.ToString();
+            return _track.DiscNumber > 0 ? $"{_track.DiscNumber}-{number:00}" : number.ToString("00");
         }
     }
 
     public string DurationText => _track.Duration.TotalHours >= 1
         ? _track.Duration.ToString(@"h\:mm\:ss")
         : _track.Duration.ToString(@"m\:ss");
+
+    public string SubtitleLine => _track.BitrateKbps > 0
+        ? $"{Artist} · {_track.BitrateKbps} kbps · MP3"
+        : $"{Artist} · MP3";
 
     public byte[]? CoverArtBytes => _track.CoverArt;
 

@@ -12,6 +12,8 @@
     <Color x:Key="TextFaint">#5B5B67</Color>
     <Color x:Key="Accent">#FF2D46</Color>
     <Color x:Key="AccentHover">#FF4A5C</Color>
+    <Color x:Key="Success">#34C759</Color>
+    <Color x:Key="ProgressAccent">#8E7CF0</Color>
 
     <SolidColorBrush x:Key="BgRightBrush" Color="{StaticResource BgRight}" />
     <SolidColorBrush x:Key="PanelBrush" Color="{StaticResource Panel}" />
@@ -23,18 +25,8 @@
     <SolidColorBrush x:Key="TextFaintBrush" Color="{StaticResource TextFaint}" />
     <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource Accent}" />
     <SolidColorBrush x:Key="AccentHoverBrush" Color="{StaticResource AccentHover}" />
+    <SolidColorBrush x:Key="SuccessBrush" Color="{StaticResource Success}" />
+    <SolidColorBrush x:Key="ProgressAccentBrush" Color="{StaticResource ProgressAccent}" />
     <SolidColorBrush x:Key="ScrimBrush" Color="#D8070708" />
-
-    <LinearGradientBrush x:Key="ArtworkGradient" StartPoint="0,0" EndPoint="1,1">
-        <GradientStop Offset="0" Color="#FF3145" />
-        <GradientStop Offset="0.5" Color="#7A2A82" />
-        <GradientStop Offset="1" Color="#2438E8" />
-    </LinearGradientBrush>
-
-    <LinearGradientBrush x:Key="ArtworkScrim" StartPoint="0,0" EndPoint="0,1">
-        <GradientStop Offset="0" Color="#59000000" />
-        <GradientStop Offset="0.4" Color="#14000000" />
-        <GradientStop Offset="1" Color="#E4000000" />
-    </LinearGradientBrush>
 
 </ResourceDictionary>

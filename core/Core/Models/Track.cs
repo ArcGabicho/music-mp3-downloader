@@ -20,5 +20,7 @@ public sealed class Track
 
     public TimeSpan Duration { get; init; }
 
+    public int BitrateKbps { get; init; }
+
     public byte[]? CoverArt { get; init; }
 }

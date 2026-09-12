@@ -72,6 +72,7 @@ public sealed class LibraryService : ILibraryService
                 TrackNumber = tag.Track,
                 DiscNumber = tag.Disc,
                 Duration = file.Properties?.Duration ?? TimeSpan.Zero,
+                BitrateKbps = file.Properties?.AudioBitrate ?? 0,
                 CoverArt = cover,
             };
         }

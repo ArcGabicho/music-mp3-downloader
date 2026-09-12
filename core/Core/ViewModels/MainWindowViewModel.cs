@@ -14,9 +14,6 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly ILibraryService _library;
 
     [ObservableProperty]
-    private bool _isWide = true;
-
-    [ObservableProperty]
     private bool _isDownloadPanelOpen;
 
     [ObservableProperty]
@@ -56,8 +53,6 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public string LibraryPath => _library.LibraryPath;
 
-    public string LibraryCountLabel => $"#{Tracks.Count}";
-
     [RelayCommand]
     private async Task LoadLibraryAsync()
     {
@@ -75,7 +70,6 @@ public partial class MainWindowViewModel : ViewModelBase
             }
 
             Player.SetQueue(Tracks);
-            OnPropertyChanged(nameof(LibraryCountLabel));
 
             LibraryStatus = Tracks.Count == 0
                 ? $"No hay MP3 en {_library.LibraryPath}"
@@ -97,15 +91,6 @@ public partial class MainWindowViewModel : ViewModelBase
 
         SelectedTrack = track;
         Player.Play(track);
-    }
-
-    [RelayCommand]
-    private void PlayAll()
-    {
-        if (Tracks.Count > 0)
-        {
-            Player.Play(Tracks[0]);
-        }
     }
 
     [RelayCommand]
