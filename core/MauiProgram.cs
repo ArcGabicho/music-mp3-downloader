@@ -22,6 +22,12 @@ public static class MauiProgram
 {
 #if WINDOWS
     private static int _mainWindowHooked;
+
+    private const int DwmwaBorderColor = 34;
+    private const int DwmwaColorNone = unchecked((int)0xFFFFFFFE);
+
+    [System.Runtime.InteropServices.DllImport("dwmapi.dll")]
+    private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
 #endif
 
     public static MauiApp CreateMauiApp()
@@ -66,6 +72,12 @@ public static class MauiProgram
                     presenter.IsMaximizable = false;
                     presenter.IsMinimizable = false;
                 }
+
+                // SetBorderAndTitleBar(false, false) quita el marco de WinUI, pero en
+                // Windows 11 el propio DWM sigue dibujando su borde de sistema (blanco/
+                // acento) alrededor de la ventana; hay que desactivarlo aparte.
+                var borderColorNone = DwmwaColorNone;
+                DwmSetWindowAttribute(handle, DwmwaBorderColor, ref borderColorNone, sizeof(int));
 
                 // La app es únicamente de bandeja: arranca oculta, solo aparece al hacer
                 // clic en el ícono (igual que Mega/Discord). Ocultarla ya aquí no sirve:
