@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:MusicMp3Downloader.App.ViewModels;assembly=MusicMp3Downloader.Core"
              xmlns:conv="clr-namespace:MusicMp3Downloader.App.Converters"
+             xmlns:controls="clr-namespace:MusicMp3Downloader.App.Controls"
              x:Class="MusicMp3Downloader.App.Views.MainPage"
              x:Name="RootPage"
              x:DataType="vm:MainWindowViewModel"
@@ -18,44 +19,59 @@
     <Grid RowDefinitions="Auto,*,Auto">
 
         <!-- ============ TARJETA "REPRODUCIENDO AHORA" ============ -->
-        <Grid Grid.Row="0" Padding="24,20,24,16" ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="14"
-              MaximumWidthRequest="860" HorizontalOptions="Fill">
-            <Border Grid.Column="0" StyleClass="avatarFrame">
-                <Grid>
-                    <Ellipse Fill="{StaticResource Hairline}" WidthRequest="14" HeightRequest="14"
-                             HorizontalOptions="Center" VerticalOptions="Center"
-                             IsVisible="{Binding Player.Current.CoverArtBytes, Converter={StaticResource IsNull}}" />
-                    <Image Source="{Binding Player.Current.CoverArtBytes, Converter={StaticResource ByteArrayToImageSource}}"
-                           Aspect="AspectFill"
-                           IsVisible="{Binding Player.Current.CoverArtBytes, Converter={StaticResource IsNotNull}}" />
+        <VerticalStackLayout Grid.Row="0" Spacing="14">
+            <Grid Padding="24,20,24,0" ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="14"
+                  MaximumWidthRequest="860" HorizontalOptions="Fill">
+                <Border Grid.Column="0" StyleClass="avatarFrame">
+                    <Grid>
+                        <Ellipse Fill="{StaticResource Hairline}" WidthRequest="14" HeightRequest="14"
+                                 HorizontalOptions="Center" VerticalOptions="Center"
+                                 IsVisible="{Binding Player.Current.CoverArtBytes, Converter={StaticResource IsNull}}" />
+                        <Image Source="{Binding Player.Current.CoverArtBytes, Converter={StaticResource ByteArrayToImageSource}}"
+                               Aspect="AspectFill"
+                               IsVisible="{Binding Player.Current.CoverArtBytes, Converter={StaticResource IsNotNull}}" />
+                    </Grid>
+                </Border>
+
+                <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+                    <Label Text="{Binding Player.NowPlayingTitle}" StyleClass="cardTitle" />
+                    <Label Text="{Binding Player.NowPlayingSubtitle}" StyleClass="cardSubtitle"
+                           IsVisible="{Binding Player.NowPlayingSubtitle, Converter={StaticResource IsNotNull}}" />
+                </VerticalStackLayout>
+
+                <Border Grid.Column="2" StyleClass="statusPill" VerticalOptions="Center"
+                        IsVisible="{Binding Player.NowPlayingSubtitle, Converter={StaticResource IsNotNull}}">
+                    <HorizontalStackLayout Spacing="6">
+                        <Ellipse Fill="{StaticResource SuccessBrush}" WidthRequest="8" HeightRequest="8"
+                                 VerticalOptions="Center" />
+                        <Label Text="Descargado" FontSize="12" TextColor="{StaticResource TextPrimaryBrush}"
+                               VerticalOptions="Center" />
+                    </HorizontalStackLayout>
+                </Border>
+
+                <Border Grid.Column="3" StyleClass="iconGhost" VerticalOptions="Center">
+                    <Path Data="M10,1 L10,19 M1,10 L19,10" Stroke="{StaticResource TextPrimaryBrush}"
+                          StrokeThickness="2" StrokeLineCap="Round"
+                          HorizontalOptions="Center" VerticalOptions="Center" />
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ToggleDownloadPanelCommand}" />
+                    </Border.GestureRecognizers>
+                </Border>
+            </Grid>
+
+            <!-- ============ FORMA DE ONDA (visual, no controla el seek) ============ -->
+            <VerticalStackLayout Padding="24,0,24,16" Spacing="6"
+                                  MaximumWidthRequest="860" HorizontalOptions="Fill"
+                                  IsVisible="{Binding Player.Current, Converter={StaticResource IsNotNull}}">
+                <controls:WaveformView HeightRequest="46"
+                                        Peaks="{Binding Player.WaveformPeaks}"
+                                        Progress="{Binding Player.Progress}" />
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Grid.Column="0" Text="{Binding Player.PositionText}" StyleClass="rowTime" />
+                    <Label Grid.Column="1" Text="{Binding Player.DurationText}" StyleClass="rowTime" />
                 </Grid>
-            </Border>
-
-            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
-                <Label Text="{Binding Player.NowPlayingTitle}" StyleClass="cardTitle" />
-                <Label Text="{Binding Player.NowPlayingSubtitle}" StyleClass="cardSubtitle"
-                       IsVisible="{Binding Player.NowPlayingSubtitle, Converter={StaticResource IsNotNull}}" />
             </VerticalStackLayout>
-
-            <Border Grid.Column="2" StyleClass="statusPill" VerticalOptions="Center"
-                    IsVisible="{Binding Player.NowPlayingSubtitle, Converter={StaticResource IsNotNull}}">
-                <HorizontalStackLayout Spacing="6">
-                    <Ellipse Fill="{StaticResource SuccessBrush}" WidthRequest="8" HeightRequest="8"
-                             VerticalOptions="Center" />
-                    <Label Text="Descargado" FontSize="12" TextColor="{StaticResource TextPrimaryBrush}"
-                           VerticalOptions="Center" />
-                </HorizontalStackLayout>
-            </Border>
-
-            <Border Grid.Column="3" StyleClass="iconGhost" VerticalOptions="Center">
-                <Path Data="M10,1 L10,19 M1,10 L19,10" Stroke="{StaticResource TextPrimaryBrush}"
-                      StrokeThickness="2" StrokeLineCap="Round"
-                      HorizontalOptions="Center" VerticalOptions="Center" />
-                <Border.GestureRecognizers>
-                    <TapGestureRecognizer Command="{Binding ToggleDownloadPanelCommand}" />
-                </Border.GestureRecognizers>
-            </Border>
-        </Grid>
+        </VerticalStackLayout>
         <BoxView Grid.Row="0" Color="{StaticResource Hairline}" HeightRequest="1" VerticalOptions="End" />
 
         <!-- ============ LISTA DE PISTAS ============ -->

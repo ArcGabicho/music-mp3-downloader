@@ -57,6 +57,16 @@ public static class MauiProgram
                     Application.Current?.Windows.FirstOrDefault(w => w.Page is MainPage)?.Hide();
                 };
 
+                // Ventana emergente sin marco (como el flyout de Mega/Discord): sin barra
+                // de título nativa, sin borde y de tamaño fijo.
+                if (appWindow.Presenter is Microsoft.UI.Windowing.OverlappedPresenter presenter)
+                {
+                    presenter.SetBorderAndTitleBar(false, false);
+                    presenter.IsResizable = false;
+                    presenter.IsMaximizable = false;
+                    presenter.IsMinimizable = false;
+                }
+
                 // La app es únicamente de bandeja: arranca oculta, solo aparece al hacer
                 // clic en el ícono (igual que Mega/Discord). Ocultarla ya aquí no sirve:
                 // MAUI la activa/muestra justo después de OnWindowCreated, pisando el
@@ -96,6 +106,7 @@ public static class MauiProgram
         services.AddSingleton<IUiDispatcher, MauiUiDispatcher>();
         services.AddSingleton<IExternalTools, ExternalTools>();
         services.AddSingleton<IDownloadService, DownloadService>();
+        services.AddSingleton<IWaveformService, WaveformService>();
 
         services.AddSingleton<PlayerViewModel>();
         services.AddSingleton<MainWindowViewModel>();

@@ -84,11 +84,6 @@
                 </VisualStateGroup>
             </VisualStateGroupList>
         </Setter>
-        <Style.Triggers>
-            <DataTrigger TargetType="Border" Binding="{Binding IsPlaying}" Value="True">
-                <Setter Property="BackgroundColor" Value="{StaticResource SurfaceActive}" />
-            </DataTrigger>
-        </Style.Triggers>
     </Style>
 
     <!-- ============ BOTONES DE TEXTO ============ -->

@@ -11,6 +11,8 @@ public sealed class AppDbContext : DbContext
 
     public DbSet<DownloadRecord> Downloads => Set<DownloadRecord>();
 
+    public DbSet<WaveformCacheEntry> WaveformPeaks => Set<WaveformCacheEntry>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<DownloadRecord>(entity =>
@@ -18,6 +20,11 @@ public sealed class AppDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Url).IsRequired();
             entity.Property(e => e.Status).HasConversion<string>();
+        });
+
+        modelBuilder.Entity<WaveformCacheEntry>(entity =>
+        {
+            entity.HasKey(e => e.FilePath);
         });
     }
 }

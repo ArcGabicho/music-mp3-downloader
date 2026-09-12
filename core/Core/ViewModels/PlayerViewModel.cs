@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MusicMp3Downloader.App.Services;
@@ -11,8 +12,10 @@ public partial class PlayerViewModel : ViewModelBase
 {
     private readonly IAudioPlayer _player;
     private readonly IUiDispatcher _dispatcher;
+    private readonly IWaveformService _waveformService;
     private readonly Timer _timer;
     private IReadOnlyList<TrackViewModel> _queue = Array.Empty<TrackViewModel>();
+    private CancellationTokenSource? _waveformCts;
 
     [ObservableProperty]
     private TrackViewModel? _current;
@@ -41,10 +44,14 @@ public partial class PlayerViewModel : ViewModelBase
     [ObservableProperty]
     private string? _statusMessage;
 
-    public PlayerViewModel(IAudioPlayer player, IUiDispatcher dispatcher)
+    [ObservableProperty]
+    private float[] _waveformPeaks = Array.Empty<float>();
+
+    public PlayerViewModel(IAudioPlayer player, IUiDispatcher dispatcher, IWaveformService waveformService)
     {
         _player = player;
         _dispatcher = dispatcher;
+        _waveformService = waveformService;
         _player.Volume = _volume;
         _player.PlaybackEnded += (_, _) => _dispatcher.Post(Next);
 
@@ -92,6 +99,33 @@ public partial class PlayerViewModel : ViewModelBase
         track.IsPlaying = true;
         IsPlaying = true;
         RaiseNowPlaying();
+        LoadWaveform(track.FilePath);
+    }
+
+    private void LoadWaveform(string filePath)
+    {
+        _waveformCts?.Cancel();
+        var cts = new CancellationTokenSource();
+        _waveformCts = cts;
+        WaveformPeaks = Array.Empty<float>();
+
+        _ = LoadWaveformCoreAsync(filePath, cts);
+    }
+
+    private async Task LoadWaveformCoreAsync(string filePath, CancellationTokenSource cts)
+    {
+        try
+        {
+            var peaks = await _waveformService.GetPeaksAsync(filePath, cts.Token);
+            if (!cts.IsCancellationRequested)
+            {
+                _dispatcher.Post(() => WaveformPeaks = peaks);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Se canceló porque el usuario cambió de pista antes de terminar de decodificar.
+        }
     }
 
     [RelayCommand]
