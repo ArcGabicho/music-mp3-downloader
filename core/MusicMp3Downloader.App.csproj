@@ -1,7 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net10.0-windows10.0.19041.0;net10.0-maccatalyst</TargetFrameworks>
+    <!-- El TFM de Windows solo se agrega si el host que compila es Windows: el XAML
+         nativo de Platforms/Windows/App.xaml pasa por XamlCompiler.exe (WindowsAppSDK),
+         un binario de Windows que no corre en macOS/Linux bajo ningún concepto — ni con
+         EnableWindowsTargeting, que solo habilita el *restore*, no la compilación. Mismo
+         patrón que usa la plantilla oficial de "dotnet new maui". -->
+    <TargetFrameworks>net10.0-maccatalyst</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <RootNamespace>MusicMp3Downloader.App</RootNamespace>
     <AssemblyName>MusicMp3Downloader.App</AssemblyName>
@@ -18,11 +24,6 @@
 
     <!-- Sin empaquetar: publicación como carpeta autónoma, sin MSIX. -->
     <WindowsPackageType>None</WindowsPackageType>
-
-    <!-- Permite restaurar/compilar el TFM net10.0-windows... en hosts no Windows
-         (p. ej. el runner macos-latest de la CI, que solo compila net10.0-maccatalyst
-         pero igual necesita resolver todos los TFM del proyecto). -->
-    <EnableWindowsTargeting>true</EnableWindowsTargeting>
 
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
