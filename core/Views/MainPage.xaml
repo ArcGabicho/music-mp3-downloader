@@ -227,10 +227,12 @@
                                 <Border StyleClass="downloadCard" Margin="0,0,0,10">
                                     <VerticalStackLayout Spacing="7">
                                         <Label Text="{Binding Title}" StyleClass="rowTitle" />
-                                        <HorizontalStackLayout Spacing="10">
-                                            <Label Text="{Binding Status}" StyleClass="rowTime" />
+                                        <HorizontalStackLayout Spacing="10" IsVisible="{Binding IsInProgress}">
+                                            <Label Text="{Binding StatusLabel}" StyleClass="rowTime" />
                                             <ProgressBar WidthRequest="280" Progress="{Binding Progress}" />
                                         </HorizontalStackLayout>
+                                        <Label Text="{Binding StatusLabel}" StyleClass="rowTime"
+                                               IsVisible="{Binding IsInProgress, Converter={StaticResource InvertedBool}}" />
                                         <Label Text="{Binding ErrorMessage}" LineBreakMode="WordWrap"
                                                TextColor="{StaticResource AccentBrush}"
                                                IsVisible="{Binding ErrorMessage, Converter={StaticResource IsNotNull}}" />

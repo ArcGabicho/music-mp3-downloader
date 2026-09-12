@@ -109,7 +109,17 @@ public partial class MainWindowViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void ToggleDownloadPanel() => IsDownloadPanelOpen = !IsDownloadPanelOpen;
+    private void ToggleDownloadPanel()
+    {
+        IsDownloadPanelOpen = !IsDownloadPanelOpen;
+        if (!IsDownloadPanelOpen)
+        {
+            // Deja el panel limpio para la próxima vez que se abra.
+            DownloadQueue.Clear();
+            DownloadUrl = string.Empty;
+            DownloadStatus = string.Empty;
+        }
+    }
 
     private bool CanDownload() => !string.IsNullOrWhiteSpace(DownloadUrl);
 
@@ -120,7 +130,8 @@ public partial class MainWindowViewModel : ViewModelBase
         DownloadUrl = string.Empty;
 
         var item = new DownloadItemViewModel(url);
-        DownloadQueue.Insert(0, item);
+        DownloadQueue.Clear();
+        DownloadQueue.Add(item);
         DownloadStatus = $"Descargando: {url}";
 
         var progress = new Progress<double>(value => item.Progress = value);

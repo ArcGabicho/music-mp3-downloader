@@ -9,6 +9,8 @@ public partial class DownloadItemViewModel : ViewModelBase
     private string _title;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsInProgress))]
+    [NotifyPropertyChangedFor(nameof(StatusLabel))]
     private DownloadStatus _status;
 
     [ObservableProperty]
@@ -22,6 +24,22 @@ public partial class DownloadItemViewModel : ViewModelBase
         _title = url;
         _status = DownloadStatus.Queued;
     }
+
+    public bool IsInProgress => Status is DownloadStatus.Queued
+        or DownloadStatus.Downloading
+        or DownloadStatus.Converting
+        or DownloadStatus.Tagging;
+
+    public string StatusLabel => Status switch
+    {
+        DownloadStatus.Queued => "En cola",
+        DownloadStatus.Downloading => "Descargando…",
+        DownloadStatus.Converting => "Convirtiendo…",
+        DownloadStatus.Tagging => "Añadiendo metadatos…",
+        DownloadStatus.Completed => "Completada",
+        DownloadStatus.Failed => "Error",
+        _ => string.Empty,
+    };
 
     public void Apply(DownloadItem item)
     {
