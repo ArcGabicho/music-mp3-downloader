@@ -88,10 +88,20 @@ public partial class PlayerViewModel : ViewModelBase
             previous.IsPlaying = false;
         }
 
+        try
+        {
+            _player.Play(track.FilePath);
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"No se pudo reproducir: {ex.Message}";
+            return;
+        }
+
+        StatusMessage = null;
         Current = track;
         track.IsPlaying = true;
         Seed = track.Seed;
-        _player.Play(track.FilePath);
         IsPlaying = true;
         RaiseNowPlaying();
     }

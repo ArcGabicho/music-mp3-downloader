@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using MauiAudio = Plugin.Maui.Audio;
 
 namespace MusicMp3Downloader.App.Services;
@@ -8,6 +9,7 @@ public sealed class PluginMauiAudioPlayer : IAudioPlayer
 {
     private readonly MauiAudio.IAudioManager _audioManager;
     private MauiAudio.IAudioPlayer? _player;
+    private FileStream? _audioStream;
     private bool _isPaused;
     private double _volume = 0.8;
 
@@ -48,7 +50,11 @@ public sealed class PluginMauiAudioPlayer : IAudioPlayer
     {
         DisposePlayer();
 
-        _player = _audioManager.CreatePlayer(filePath);
+        // CreatePlayer(string) espera un recurso empaquetado con la app, no una ruta
+        // absoluta del sistema de archivos; para reproducir un MP3 de la carpeta de
+        // música del usuario hay que abrirlo como Stream.
+        _audioStream = File.OpenRead(filePath);
+        _player = _audioManager.CreatePlayer(_audioStream);
         _player.Volume = _volume;
         _player.PlaybackEnded += OnPlaybackEnded;
         _isPaused = false;
@@ -90,6 +96,9 @@ public sealed class PluginMauiAudioPlayer : IAudioPlayer
         _player.PlaybackEnded -= OnPlaybackEnded;
         _player.Dispose();
         _player = null;
+
+        _audioStream?.Dispose();
+        _audioStream = null;
     }
 
     public void Dispose() => DisposePlayer();
