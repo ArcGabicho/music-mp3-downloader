@@ -143,7 +143,7 @@ docs: documentar el workflow de deploy
 Una PR debe:
 
 - Tener un objetivo único y acotado.
-- Pasar CI (build + test + format) en Windows y macOS.
+- Pasar CI (build + test + format) — corre únicamente en runners Windows.
 - Incluir pruebas en `test/` cuando añada lógica no trivial.
 - Actualizar la documentación afectada (`README.md`, `docs/`).
 - Describir **qué** cambia y **por qué**, y cómo probarlo.

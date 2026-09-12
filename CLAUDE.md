@@ -31,7 +31,10 @@ dotnet test MusicMp3Downloader.slnx                          # tests (solo refer
 dotnet format MusicMp3Downloader.slnx --verify-no-changes    # estilo (la CI lo exige)
 ```
 
-La CI ejecuta exactamente `build` + `test` + `format` en Windows y macOS; deben pasar los tres.
+La CI ejecuta exactamente `build` + `test` + `format`, únicamente en runners Windows
+(`windows-latest`); deben pasar los tres. La app es una aplicación de bandeja de Windows
+(WinUI + H.NotifyIcon.Maui), así que ni CI ni `deploy.yml` compilan, prueban ni empaquetan
+para macOS, aunque el proyecto siga declarando el TFM `net10.0-maccatalyst`.
 
 ## Arquitectura
 

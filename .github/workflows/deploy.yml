@@ -21,18 +21,8 @@ env:
 
 jobs:
   package:
-    name: Package (${{ matrix.rid }})
-    runs-on: ${{ matrix.runner }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - rid: win-x64
-            runner: windows-latest
-            tfm: net10.0-windows10.0.19041.0
-          - rid: maccatalyst
-            runner: macos-latest
-            tfm: net10.0-maccatalyst
+    name: Package (win-x64)
+    runs-on: windows-latest
 
     steps:
       - name: Checkout
@@ -54,8 +44,7 @@ jobs:
           echo "tag=${ref}" >> "$GITHUB_OUTPUT"
           echo "number=${ref#v}" >> "$GITHUB_OUTPUT"
 
-      - name: Publish (Windows)
-        if: matrix.rid == 'win-x64'
+      - name: Publish
         # Sin --runtime explícito: en un proyecto multi-target, pasarlo como propiedad
         # global de MSBuild hace que NuGet lo intente resolver también para el TFM de
         # Mac Catalyst (combinación sin sentido maccatalyst+win-x64), buscando un
@@ -65,49 +54,27 @@ jobs:
         run: >
           dotnet publish ${{ env.PROJECT }}
           --configuration ${{ env.CONFIGURATION }}
-          --framework ${{ matrix.tfm }}
+          --framework net10.0-windows10.0.19041.0
           --self-contained true
           -p:WindowsPackageType=None
           -p:WindowsAppSDKSelfContained=true
           -p:Version=${{ steps.version.outputs.number }}
-          --output ./artifacts/${{ matrix.rid }}
-
-      - name: Publish (Mac Catalyst)
-        if: matrix.rid == 'maccatalyst'
-        run: >
-          dotnet publish ${{ env.PROJECT }}
-          --configuration ${{ env.CONFIGURATION }}
-          --framework ${{ matrix.tfm }}
-          -p:Version=${{ steps.version.outputs.number }}
-          --output ./artifacts/${{ matrix.rid }}
-
-      - name: Archive (macOS .app)
-        if: runner.os == 'macOS'
-        run: |
-          app_path=$(find ./artifacts/${{ matrix.rid }} -maxdepth 1 -name "*.app" | head -n1)
-          if [ -z "$app_path" ]; then
-            echo "No se encontró ningún .app en ./artifacts/${{ matrix.rid }}" >&2
-            exit 1
-          fi
-          ditto -c -k --sequesterRsrc --keepParent "$app_path" \
-            "MusicMp3Downloader-${{ steps.version.outputs.number }}-${{ matrix.rid }}.zip"
+          --output ./artifacts/win-x64
 
       - name: Archive (zip)
-        if: runner.os == 'Windows'
         shell: pwsh
         run: >
-          Compress-Archive -Path ./artifacts/${{ matrix.rid }}/*
-          -DestinationPath "MusicMp3Downloader-${{ steps.version.outputs.number }}-${{ matrix.rid }}.zip"
+          Compress-Archive -Path ./artifacts/win-x64/*
+          -DestinationPath "MusicMp3Downloader-${{ steps.version.outputs.number }}-win-x64.zip"
 
       - name: Build Windows installer (Inno Setup)
-        if: runner.os == 'Windows'
         shell: pwsh
         run: |
           $iscc = (Get-Command iscc -ErrorAction SilentlyContinue).Source
           if (-not $iscc) { $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" }
           & $iscc `
             /DMyAppVersion=${{ steps.version.outputs.number }} `
-            /DSourceDir=${{ github.workspace }}\artifacts\${{ matrix.rid }} `
+            /DSourceDir=${{ github.workspace }}\artifacts\win-x64 `
             /DOutputDir=${{ github.workspace }} `
             packaging\windows\installer.iss
           Copy-Item `
@@ -117,14 +84,14 @@ jobs:
       - name: Upload package
         uses: actions/upload-artifact@v4
         with:
-          name: package-${{ matrix.rid }}
+          name: package-win-x64
           path: MusicMp3Downloader-*
           if-no-files-found: error
 
   release:
     name: Publish GitHub Release
     needs: package
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - name: Download packages
         uses: actions/download-artifact@v4
@@ -134,6 +101,7 @@ jobs:
           merge-multiple: true
 
       - name: Create or update release
+        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.event.inputs.version || github.ref_name }}
