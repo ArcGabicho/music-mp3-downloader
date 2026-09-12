@@ -63,9 +63,7 @@
             <VerticalStackLayout Padding="24,0,24,16" Spacing="6"
                                   MaximumWidthRequest="860" HorizontalOptions="Fill"
                                   IsVisible="{Binding Player.Current, Converter={StaticResource IsNotNull}}">
-                <controls:WaveformView HeightRequest="46"
-                                        Peaks="{Binding Player.WaveformPeaks}"
-                                        Progress="{Binding Player.Progress}" />
+                <controls:WaveformView HeightRequest="46" Peaks="{Binding Player.WaveformPeaks}" />
                 <Grid ColumnDefinitions="*,Auto">
                     <Label Grid.Column="0" Text="{Binding Player.PositionText}" StyleClass="rowTime" />
                     <Label Grid.Column="1" Text="{Binding Player.DurationText}" StyleClass="rowTime" />
