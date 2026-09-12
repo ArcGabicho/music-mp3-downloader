@@ -67,9 +67,9 @@ dotnet build MusicMp3Downloader.slnx --configuration Debug
 Publicación local de una carpeta autónoma (self-contained):
 
 ```bash
-# Windows
+# Windows (el RID win-x64 se resuelve solo; no pasar -r explícito, ver Trampas conocidas)
 dotnet publish core/MusicMp3Downloader.App.csproj \
-  -c Release -f net10.0-windows10.0.19041.0 -r win-x64 --self-contained true \
+  -c Release -f net10.0-windows10.0.19041.0 --self-contained true \
   -p:WindowsPackageType=None -p:WindowsAppSDKSelfContained=true
 
 # macOS (universal x64+arm64, produce un bundle .app)

@@ -61,9 +61,15 @@ Pasos:
    - `tag`: la etiqueta tal cual (`v1.2.3`).
    - `number`: sin la `v` inicial (`1.2.3`), usado para `-p:Version=`.
    La fuente es `github.event.inputs.version` (manual) o `github.ref_name` (push de tag).
-5. **Publish (Windows)** — `dotnet publish -f net10.0-windows10.0.19041.0 -r win-x64
+5. **Publish (Windows)** — `dotnet publish -f net10.0-windows10.0.19041.0
    --self-contained true -p:WindowsPackageType=None -p:WindowsAppSDKSelfContained=true`
    hacia `./artifacts/win-x64`: publica sin empaquetar en MSIX, como carpeta autónoma.
+   **Sin `-r`/`--runtime` explícito a propósito**: en un proyecto multi-target, pasarlo
+   en la línea de comandos lo vuelve una propiedad global de MSBuild que NuGet también
+   intenta aplicar al TFM de Mac Catalyst del mismo proyecto (combinación sin sentido
+   maccatalyst+win-x64), buscando un paquete de runtime Mono para Windows inexistente
+   (`NU1102: Microsoft.NETCore.App.Runtime.Mono.win-x64`). El RID se resuelve solo,
+   de forma implícita, para el TFM de Windows en un runner Windows.
 6. **Publish (Mac Catalyst)** — `dotnet publish -f net10.0-maccatalyst` hacia
    `./artifacts/maccatalyst`; produce un bundle `.app` (Release usa por defecto
    `maccatalyst-x64;maccatalyst-arm64`, es decir, universal).

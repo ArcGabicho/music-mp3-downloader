@@ -116,3 +116,16 @@ Añade pruebas junto con cualquier lógica no trivial.
   Mac App Store sin rediseñar ese acceso.
 - Publicar para Windows requiere `-p:WindowsPackageType=None -p:WindowsAppSDKSelfContained=true`
   para obtener una carpeta autónoma (sin MSIX) que `installer.iss` pueda envolver.
+- **Nunca pases `-r`/`--runtime win-x64` explícito** al compilar/publicar `App.csproj`:
+  como el proyecto es multi-target, se vuelve una propiedad global de MSBuild que NuGet
+  intenta aplicar también al TFM `net10.0-maccatalyst` (combinación sin sentido
+  maccatalyst+win-x64), buscando un paquete de runtime Mono para Windows que no existe
+  (`NU1102: Microsoft.NETCore.App.Runtime.Mono.win-x64`). El RID de Windows se resuelve
+  solo, de forma implícita, al compilar/publicar con `-f net10.0-windows...` en un
+  runner/máquina Windows — no hace falta (ni conviene) forzarlo.
+- El TFM `net10.0-windows...` **no compila en hosts que no son Windows**, ni con
+  `EnableWindowsTargeting=true` (esa propiedad solo habilita el *restore*, no la
+  compilación): el XAML de `Platforms/Windows/` pasa por `XamlCompiler.exe`
+  (WindowsAppSDK), un binario de Windows. Por eso `TargetFrameworks` en `App.csproj`
+  está condicionado a `$([MSBuild]::IsOSPlatform('windows'))` — no lo hardcodees de
+  vuelta a una lista fija con ambos TFM.

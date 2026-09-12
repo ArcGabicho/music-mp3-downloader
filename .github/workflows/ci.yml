@@ -113,11 +113,16 @@ jobs:
 
       - name: Publish (Windows)
         if: matrix.rid == 'win-x64'
+        # Sin --runtime explícito: pasarlo como propiedad global de MSBuild en un
+        # proyecto multi-target hace que NuGet intente resolverlo también para el TFM
+        # de Mac Catalyst (combinación sin sentido: maccatalyst + win-x64), lo que
+        # termina buscando un paquete de runtime Mono para Windows que no existe
+        # (NU1102). El RID win-x64 se resuelve solo, de forma implícita, para el TFM de
+        # Windows en un runner Windows.
         run: >
           dotnet publish core/MusicMp3Downloader.App.csproj
           --configuration ${{ env.CONFIGURATION }}
           --framework ${{ matrix.tfm }}
-          --runtime win-x64
           --self-contained true
           -p:WindowsPackageType=None
           -p:WindowsAppSDKSelfContained=true
