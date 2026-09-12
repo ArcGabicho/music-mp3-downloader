@@ -11,17 +11,23 @@
     <ContentPage.Resources>
         <conv:ByteArrayToImageSourceConverter x:Key="ByteArrayToImageSource" />
         <conv:IsNotNullConverter x:Key="IsNotNull" />
+        <conv:IsNullConverter x:Key="IsNull" />
         <conv:InvertedBoolConverter x:Key="InvertedBool" />
     </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto,*,Auto">
 
         <!-- ============ TARJETA "REPRODUCIENDO AHORA" ============ -->
-        <Grid Grid.Row="0" Padding="24,20,20,12" ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="14">
+        <Grid Grid.Row="0" Padding="24,20,24,16" ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="14">
             <Border Grid.Column="0" StyleClass="avatarFrame">
-                <Image Source="{Binding Player.Current.CoverArtBytes, Converter={StaticResource ByteArrayToImageSource}}"
-                       Aspect="AspectFill"
-                       IsVisible="{Binding Player.Current.CoverArtBytes, Converter={StaticResource IsNotNull}}" />
+                <Grid>
+                    <Ellipse Fill="{StaticResource Hairline}" WidthRequest="14" HeightRequest="14"
+                             HorizontalOptions="Center" VerticalOptions="Center"
+                             IsVisible="{Binding Player.Current.CoverArtBytes, Converter={StaticResource IsNull}}" />
+                    <Image Source="{Binding Player.Current.CoverArtBytes, Converter={StaticResource ByteArrayToImageSource}}"
+                           Aspect="AspectFill"
+                           IsVisible="{Binding Player.Current.CoverArtBytes, Converter={StaticResource IsNotNull}}" />
+                </Grid>
             </Border>
 
             <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
@@ -49,26 +55,41 @@
                 </Border.GestureRecognizers>
             </Border>
         </Grid>
+        <BoxView Grid.Row="0" Color="{StaticResource Hairline}" HeightRequest="1" VerticalOptions="End" />
 
         <!-- ============ LISTA DE PISTAS ============ -->
-        <CollectionView Grid.Row="1" Margin="12,8,12,8"
-                         ItemsSource="{Binding Tracks}" SelectionMode="None">
-            <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="vm:TrackViewModel">
-                    <Grid StyleClass="trackRow" ColumnDefinitions="40,*,Auto" Padding="12,0" HeightRequest="46">
-                        <Grid.GestureRecognizers>
-                            <TapGestureRecognizer
-                                Command="{Binding Source={x:Reference RootPage}, Path=BindingContext.PlayTrackCommand}"
-                                CommandParameter="{Binding .}" />
-                        </Grid.GestureRecognizers>
+        <Grid Grid.Row="1">
+            <CollectionView Margin="12,8,12,8" ItemsSource="{Binding Tracks}" SelectionMode="None">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:TrackViewModel">
+                        <Border StyleClass="trackRow" HeightRequest="46">
+                            <Grid ColumnDefinitions="40,*,Auto">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={x:Reference RootPage}, Path=BindingContext.PlayTrackCommand}"
+                                        CommandParameter="{Binding .}" />
+                                </Grid.GestureRecognizers>
 
-                        <Label Grid.Column="0" Text="{Binding IndexLabel}" StyleClass="trackIndex" />
-                        <Label Grid.Column="1" Text="{Binding Title}" StyleClass="trackTitle" />
-                        <Label Grid.Column="2" Text="{Binding DurationText}" StyleClass="rowTime" Margin="14,0,4,0" />
-                    </Grid>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
+                                <Label Grid.Column="0" Text="{Binding IndexLabel}" StyleClass="trackIndex" />
+                                <Label Grid.Column="1" Text="{Binding Title}" StyleClass="trackTitle" />
+                                <Label Grid.Column="2" Text="{Binding DurationText}" StyleClass="rowTime" Margin="14,0,4,0" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="12" Padding="40">
+                        <Ellipse Stroke="{StaticResource HairlineBrush}" StrokeThickness="1.5"
+                                 WidthRequest="40" HeightRequest="40" HorizontalOptions="Center" />
+                        <Label Text="Tu biblioteca está vacía" StyleClass="cardSubtitle" HorizontalTextAlignment="Center" />
+                        <Label Text="Descarga tu primera canción con el botón + de arriba" StyleClass="hint"
+                               HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+            </CollectionView>
+            <ActivityIndicator IsRunning="{Binding IsLoading}" IsVisible="{Binding IsLoading}"
+                                Color="{StaticResource TextFaint}" HorizontalOptions="Center" VerticalOptions="Center" />
+        </Grid>
 
         <!-- ============ BARRA DE REPRODUCCIÓN ============ -->
         <Grid Grid.Row="2" HeightRequest="86" BackgroundColor="{StaticResource Panel}">
