@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Avalonia.Threading;
+using System.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MusicMp3Downloader.App.Services;
@@ -10,7 +10,8 @@ namespace MusicMp3Downloader.App.ViewModels;
 public partial class PlayerViewModel : ViewModelBase
 {
     private readonly IAudioPlayer _player;
-    private readonly DispatcherTimer _timer;
+    private readonly IUiDispatcher _dispatcher;
+    private readonly Timer _timer;
     private IReadOnlyList<TrackViewModel> _queue = Array.Empty<TrackViewModel>();
 
     [ObservableProperty]
@@ -43,19 +44,19 @@ public partial class PlayerViewModel : ViewModelBase
     [ObservableProperty]
     private string? _statusMessage;
 
-    public PlayerViewModel(IAudioPlayer player)
+    public PlayerViewModel(IAudioPlayer player, IUiDispatcher dispatcher)
     {
         _player = player;
+        _dispatcher = dispatcher;
         _player.Volume = _volume;
-        _player.PlaybackEnded += (_, _) => Dispatcher.UIThread.Post(Next);
+        _player.PlaybackEnded += (_, _) => _dispatcher.Post(Next);
 
-        _timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(250) };
-        _timer.Tick += (_, _) => Tick();
-        _timer.Start();
+        var interval = TimeSpan.FromMilliseconds(250);
+        _timer = new Timer(_ => _dispatcher.Post(Tick), null, interval, interval);
 
         if (!_player.IsAvailable)
         {
-            StatusMessage = "Reproducción no disponible: instala 'vlc' (libvlc) en el sistema.";
+            StatusMessage = "Reproducción no disponible en este equipo.";
         }
     }
 

@@ -15,6 +15,7 @@ permissions:
 
 env:
   DOTNET_VERSION: "10.0.x"
+  SOLUTION: MusicMp3Downloader.slnx
   PROJECT: core/MusicMp3Downloader.App.csproj
   CONFIGURATION: Release
 
@@ -26,12 +27,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - rid: linux-x64
-            runner: ubuntu-latest
           - rid: win-x64
             runner: windows-latest
-          - rid: osx-arm64
+            tfm: net10.0-windows10.0.19041.0
+          - rid: maccatalyst
             runner: macos-latest
+            tfm: net10.0-maccatalyst
 
     steps:
       - name: Checkout
@@ -42,6 +43,9 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
+      - name: Restore .NET MAUI workload
+        run: dotnet workload restore ${{ env.SOLUTION }}
+
       - name: Resolve version
         id: version
         shell: bash
@@ -50,21 +54,38 @@ jobs:
           echo "tag=${ref}" >> "$GITHUB_OUTPUT"
           echo "number=${ref#v}" >> "$GITHUB_OUTPUT"
 
-      - name: Publish
+      - name: Publish (Windows)
+        if: matrix.rid == 'win-x64'
         run: >
           dotnet publish ${{ env.PROJECT }}
           --configuration ${{ env.CONFIGURATION }}
-          --runtime ${{ matrix.rid }}
+          --framework ${{ matrix.tfm }}
+          --runtime win-x64
           --self-contained true
-          -p:PublishSingleFile=true
+          -p:WindowsPackageType=None
+          -p:WindowsAppSDKSelfContained=true
           -p:Version=${{ steps.version.outputs.number }}
           --output ./artifacts/${{ matrix.rid }}
 
-      - name: Archive (tar.gz)
-        if: runner.os != 'Windows'
+      - name: Publish (Mac Catalyst)
+        if: matrix.rid == 'maccatalyst'
         run: >
-          tar -czf "MusicMp3Downloader-${{ steps.version.outputs.number }}-${{ matrix.rid }}.tar.gz"
-          -C ./artifacts/${{ matrix.rid }} .
+          dotnet publish ${{ env.PROJECT }}
+          --configuration ${{ env.CONFIGURATION }}
+          --framework ${{ matrix.tfm }}
+          -p:Version=${{ steps.version.outputs.number }}
+          --output ./artifacts/${{ matrix.rid }}
+
+      - name: Archive (macOS .app)
+        if: runner.os == 'macOS'
+        run: |
+          app_path=$(find ./artifacts/${{ matrix.rid }} -maxdepth 1 -name "*.app" | head -n1)
+          if [ -z "$app_path" ]; then
+            echo "No se encontró ningún .app en ./artifacts/${{ matrix.rid }}" >&2
+            exit 1
+          fi
+          ditto -c -k --sequesterRsrc --keepParent "$app_path" \
+            "MusicMp3Downloader-${{ steps.version.outputs.number }}-${{ matrix.rid }}.zip"
 
       - name: Archive (zip)
         if: runner.os == 'Windows'

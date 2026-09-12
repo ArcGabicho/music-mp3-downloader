@@ -2,13 +2,16 @@
 
 ## Resumen
 
-**Music MP3 Downloader** es un **reproductor de música de escritorio** multiplataforma
-construido con **.NET 10** y **Avalonia UI**. Reproduce la biblioteca local del usuario
-(la carpeta de música del sistema) y, además, descarga audio de YouTube a MP3 de forma
-100 % local con `yt-dlp` + FFmpeg, dejándolo en esa misma carpeta.
+**Music MP3 Downloader** es un **reproductor de música de escritorio** para **Windows y
+macOS** construido con **.NET 10** y **.NET MAUI**. Reproduce la biblioteca local del
+usuario (la carpeta de música del sistema) y, además, descarga audio de YouTube a MP3 de
+forma 100 % local con `yt-dlp` + FFmpeg, dejándolo en esa misma carpeta.
 
-Nació como un servicio web FastAPI y se migró a una aplicación nativa de escritorio para
-eliminar la necesidad de servidor, base de datos remota y almacenamiento de objetos.
+Nació como un servicio web FastAPI, se migró a una aplicación de escritorio con Avalonia
+UI para eliminar la necesidad de servidor y, después, a **.NET MAUI** — Avalonia soportaba
+Linux pero MAUI no lo hace de escritorio, así que el soporte de Linux se retiró en esa
+migración a cambio de reproducción de audio y empaquetado más alineados con el
+ecosistema de Microsoft en Windows/macOS.
 
 ## Estado
 
@@ -16,7 +19,8 @@ En desarrollo temprano, pero funcional de extremo a extremo:
 
 - **Reproductor** — UI de dos paneles (portada + lista de pistas + barra de reproducción
   con forma de onda). Escanea los MP3 de la carpeta de música, lee sus tags con TagLib#
-  y reproduce con LibVLC. Transporte: play/pausa, anterior/siguiente, buscar, volumen.
+  y reproduce con `Plugin.Maui.Audio`. Transporte: play/pausa, anterior/siguiente,
+  buscar, volumen.
 - **Descarga** — panel accesible desde el botón «DESCARGAR»/menú; invoca `yt-dlp`, y al
   terminar reescanea la biblioteca para que la pista nueva aparezca en la lista.
 - Pendiente: cancelación de descargas desde la UI, pantalla de historial, ajustes.
@@ -33,40 +37,40 @@ estuvieran recurre al `PATH`. `DownloadService` invoca ese yt-dlp y le pasa
 
 - Compilar sin red: `dotnet build -p:BundleExternalTools=false`.
 - Se usa `releases/latest` a propósito (yt-dlp necesita actualizarse a menudo).
-- Peso aproximado por plataforma: ~120 MB (yt-dlp ~40 MB + FFmpeg ~80 MB).
+- RIDs soportados: `win-x64`, `win-arm64`, `osx-x64`, `osx-arm64` (la carpeta `osx-x64`
+  se usa también para el bundle universal de Mac Catalyst).
 
 ### Reproducción de audio
 
-`IAudioPlayer` la implementa `LibVlcAudioPlayer`. En Windows y macOS los binarios nativos
-de LibVLC llegan por NuGet (`VideoLAN.LibVLC.*`, referenciados solo para ese RID); en
-**Linux se usa la `libvlc` del sistema** (`pacman -S vlc` / `apt install vlc`) — es la
-única dependencia externa que el usuario de Linux instala. Si el motor nativo no está
-disponible, `IsAvailable` es `false`, la app sigue abriendo y la barra muestra un aviso
-en lugar de fallar.
+`IAudioPlayer` la implementa `PluginMauiAudioPlayer`, que envuelve el paquete
+`Plugin.Maui.Audio` (headless: no requiere montar ningún control en el árbol visual,
+a diferencia de `CommunityToolkit.Maui.Views.MediaElement`). Sustituyó a LibVLCSharp
+porque `VideoLAN.LibVLC.Mac` apunta a macOS de escritorio clásico, no al entorno
+sandboxeado de Mac Catalyst.
 
 ### Dónde se guardan los archivos
 
 El MP3 se guarda en la carpeta de música del usuario, resuelta por `IMusicLibrary`
 según el sistema operativo:
 
-| Plataforma | Carpeta                                                                       |
-|------------|-----------------------------------------------------------------------------|
-| Windows    | `SpecialFolder.MyMusic` (la carpeta «Música»/«Music» localizada)            |
-| macOS      | `~/Music`                                                                    |
-| Linux      | `XDG_MUSIC_DIR` (env o `~/.config/user-dirs.dirs`), p. ej. `~/Música`; si no hay configuración XDG, `~/Música` o `~/Music` |
+| Plataforma          | Carpeta                                                          |
+|---------------------|-------------------------------------------------------------------|
+| Windows             | `SpecialFolder.MyMusic` (la carpeta «Música»/«Music» localizada) |
+| macOS / Mac Catalyst| `~/Music`                                                        |
 
 La base de datos SQLite guarda **solo los metadatos** de cada descarga
 (`DownloadRecord`: URL, título, artista, ruta del archivo, tamaño, estado y fecha).
-El archivo MP3 nunca se almacena en la base de datos.
+El archivo MP3 nunca se almacena en la base de datos. La ruta de la base de datos se
+resuelve con `FileSystem.AppDataDirectory` (MAUI Essentials), portable entre plataformas.
 
 ## Características
 
 - 🎧 **Reproductor local** — Recorre los MP3 de la carpeta de música, muestra portada y metadatos, y los reproduce con controles de transporte y barra de forma de onda.
 - 🎵 **Descarga de MP3** — Extrae y convierte audio de vídeos de YouTube a MP3, 100 % en local, dentro de la propia carpeta de música.
 - 🖥️ **Aplicación de escritorio nativa** — Sin navegador ni servidor: se ejecuta directamente en tu equipo.
-- 🌐 **Multiplataforma** — Un mismo código base para Windows, macOS y Linux gracias a Avalonia UI.
+- 🌐 **Windows y macOS** — Un mismo código base para ambas plataformas gracias a .NET MAUI.
 - 🎨 **UI oscura y responsive** — Diseño de dos paneles que colapsa a uno solo en ventanas estrechas; pensado para pantalla maximizada.
-- 📦 **Distribución autónoma** — Publicación como ejecutable único self-contained, sin necesidad de instalar el runtime de .NET.
+- 📦 **Distribución autónoma** — Publicación self-contained, sin necesidad de instalar el runtime de .NET.
 
 ## Stack tecnológico
 
@@ -74,13 +78,11 @@ El archivo MP3 nunca se almacena en la base de datos.
 |---------------------|-------------------------------------|
 | **Runtime**         | .NET 10                             |
 | **Lenguaje**        | C# 13                               |
-| **UI**              | Avalonia UI 12 + Fluent Theme (variante oscura) |
+| **UI**              | .NET MAUI (tema oscuro)             |
 | **Patrón**          | MVVM (CommunityToolkit.Mvvm) + inyección de dependencias (Microsoft.Extensions.DependencyInjection) |
-| **Tipografía**      | Inter (Avalonia.Fonts.Inter)        |
-| **Reproducción**    | LibVLCSharp (LibVLC; nativo por NuGet en Windows/macOS, del sistema en Linux) |
+| **Reproducción**    | Plugin.Maui.Audio                   |
 | **Metadatos MP3**   | TagLibSharp                         |
 | **Persistencia**    | SQLite vía Entity Framework Core 10 |
-| **Diagnóstico**     | AvaloniaUI.DiagnosticsSupport (solo Debug) |
 | **Descarga**        | yt-dlp (binario empaquetado con la app) |
 | **Conversión audio**| FFmpeg (binario empaquetado con la app) |
 | **CI/CD**           | GitHub Actions                      |
@@ -90,60 +92,84 @@ El archivo MP3 nunca se almacena en la base de datos.
 ```
 music-mp3-downloader/
 ├── MusicMp3Downloader.slnx              # Solución (formato XML .slnx)
-├── core/                                # Proyecto de aplicación Avalonia
-│   ├── MusicMp3Downloader.App.csproj
-│   ├── Program.cs                       # Entry point (AppBuilder + desktop lifetime)
-│   ├── App.axaml / App.axaml.cs         # Arranque de Avalonia + contenedor de DI
-│   ├── ViewLocator.cs                   # Resuelve View a partir del ViewModel
-│   ├── app.manifest                     # Manifiesto de aplicación (Windows)
-│   ├── Assets/                          # Iconos, imágenes y fuentes empaquetadas
-│   ├── Styles/                          # Palette.axaml (recursos) + AppStyles.axaml (estilos)
-│   ├── Views/                           # Ventanas y UserControls (.axaml)
-│   │   └── MainWindow.axaml / .cs       # UI de dos paneles + overlay de descarga
-│   ├── ViewModels/                      # MainWindowViewModel, PlayerViewModel, TrackViewModel, DownloadItemViewModel
-│   ├── Models/                          # Track, DownloadItem, DownloadStatus
-│   ├── Controls/                        # WaveformScrubber (barra de progreso con forma de onda)
-│   ├── Services/                        # ILibraryService, IAudioPlayer, IDownloadService, IExternalTools, IMusicLibrary, IAudioTagger + impl.
-│   ├── Data/                            # AppDbContext (EF Core) y entidades persistidas
+├── core/                                # Proyecto MAUI (cabecera de la app)
+│   ├── MusicMp3Downloader.App.csproj    # multi-target: net10.0-windows…, net10.0-maccatalyst
+│   ├── MauiProgram.cs                   # Arranque de MAUI + contenedor de DI
+│   ├── App.xaml / App.xaml.cs           # Recursos globales + CreateWindow
+│   ├── Platforms/                       # Cabeceras nativas (Windows/WinUI3, MacCatalyst)
+│   ├── Resources/                       # Icono de app y splash screen
+│   ├── Styles/                          # Palette.xaml (recursos) + AppStyles.xaml (StyleClass)
+│   ├── Views/                           # MainPage.xaml / .xaml.cs — UI de dos paneles + overlay de descarga
+│   ├── Controls/                        # WaveformScrubber (GraphicsView, barra con forma de onda)
+│   ├── Converters/                      # ByteArrayToImageSourceConverter, IsNotNullConverter, InvertedBoolConverter
+│   ├── Services/                        # Implementaciones ligadas a MAUI: PluginMauiAudioPlayer, MauiUiDispatcher
+│   ├── Core/                            # Class library independiente de MAUI
+│   │   ├── MusicMp3Downloader.Core.csproj
+│   │   ├── Models/                      # Track, DownloadItem, DownloadStatus
+│   │   ├── ViewModels/                  # MainWindowViewModel, PlayerViewModel, TrackViewModel, DownloadItemViewModel
+│   │   ├── Services/                    # ILibraryService, IAudioPlayer, IDownloadService, IExternalTools, IMusicLibrary, IAudioTagger, IUiDispatcher + impl. agnósticas de UI
+│   │   └── Data/                        # AppDbContext (EF Core) y entidades persistidas
 │   └── Tools/                           # fetch-tools.{sh,ps1} + binarios yt-dlp/ffmpeg (descargados, no versionados)
 ├── docs/                                # Documentación
-├── test/                                # xUnit (ViewModels con fakes + lógica pura)
-├── packaging/                           # windows/installer.iss (Inno Setup) + aur/ (PKGBUILD, .desktop)
+├── test/                                # xUnit (referencia solo Core.csproj, sin dependencia de MAUI)
+├── packaging/                           # windows/installer.iss (Inno Setup)
 ├── .github/workflows/                   # ci.yml (integración) y deploy.yml (publicación)
 └── README.md
 ```
 
 ## Convenciones
 
-- **MVVM:** cada `FooViewModel` en `ViewModels/` se empareja con `Views/FooView.axaml` mediante `ViewLocator`. `MainWindow` se instancia directamente en `App.axaml.cs` con su `DataContext` resuelto desde el contenedor.
-- **Inyección de dependencias:** los servicios se registran en `App.ConfigureServices`; los ViewModels reciben sus dependencias por constructor.
-- **Datos:** el `AppDbContext` se obtiene mediante `IDbContextFactory<AppDbContext>` (apto para apps de escritorio, sin ámbito ambiental). La base SQLite vive en `%APPDATA%/MusicMp3Downloader/app.db` (o el equivalente por plataforma).
+- **Dos proyectos:** `core/Core/MusicMp3Downloader.Core.csproj` (class library `net10.0`
+  normal, sin ninguna referencia a `Microsoft.Maui.*`) contiene toda la lógica
+  (ViewModels, Services, Data, Models) para que `test/` pueda compilarla y probarla sin
+  el workload de MAUI. `core/MusicMp3Downloader.App.csproj` (multi-target MAUI) contiene
+  solo la capa de presentación: Views, estilos, el control de forma de onda y las
+  implementaciones que sí necesitan tipos de MAUI (`PluginMauiAudioPlayer`,
+  `MauiUiDispatcher`).
+- **Sin tipos de MAUI en los ViewModels:** la portada se expone como `byte[]?` (no
+  `ImageSource`); la conversión a imagen ocurre en la vista vía
+  `ByteArrayToImageSourceConverter`. El marshalling al hilo de UI pasa por la interfaz
+  propia `IUiDispatcher`, implementada en el proyecto MAUI sobre
+  `Microsoft.Maui.Dispatching.IDispatcher`.
+- **Inyección de dependencias:** los servicios se registran en
+  `MauiProgram.ConfigureServices`; los ViewModels reciben sus dependencias por
+  constructor.
+- **Datos:** el `AppDbContext` se obtiene mediante `IDbContextFactory<AppDbContext>`
+  (apto para apps de escritorio, sin ámbito ambiental). La base SQLite vive en
+  `FileSystem.AppDataDirectory/app.db`.
 
 ## La interfaz
 
-Dos paneles dentro de un `Grid` (`MainWindow.axaml`):
+Dos paneles dentro de un `Grid` (`Views/MainPage.xaml`):
 
 - **Panel izquierdo (portada)** — fondo con degradado rojo→azul; encima, la portada
-  incrustada de la pista en reproducción si existe. Contiene la marca, un botón
-  **DESCARGAR** que abre el overlay, **PLAY ALL** y el contador de pistas (`#N`). Se
-  oculta cuando la ventana baja de 900 px de ancho (`MainWindow.axaml.cs` → `IsWide`).
-- **Panel derecho (lista)** — barra superior con menú (abre el overlay), cabecera
+  incrustada de la pista en reproducción si existe. Contiene la marca y, en la barra
+  superior del panel derecho, el botón que abre el overlay de descarga. Se oculta cuando
+  la ventana baja de 900 px de ancho (`MainPage.xaml.cs` → `OnSizeAllocated`/`IsWide`).
+- **Panel derecho (lista)** — barra superior con el botón de descarga, cabecera
   `ARTISTA / AÑO` + título grande de la pista actual, la lista de pistas
-  (clic = reproducir) y, abajo, la barra de reproducción: transporte, `WaveformScrubber`
-  y volumen.
+  (`CollectionView`, tocar una fila reproduce) y, abajo, la barra de reproducción:
+  transporte, `WaveformScrubber` y volumen.
 - **Overlay de descarga** — capa modal con el campo de URL, el botón de descarga y la
   cola de descargas en curso.
+
+Los botones de icono (transporte, cerrar, alternar overlay) son `Border` + `Path`
+(vector) + `TapGestureRecognizer`, no `Button`, porque `Button` en MAUI solo admite texto
+e imagen, no contenido arbitrario.
 
 ## Flujo de reproducción
 
 1. Al arrancar, `MainWindowViewModel.LoadLibraryAsync` llama a `ILibraryService.ScanAsync`,
    que recorre `*.mp3` de la carpeta de música y crea un `TrackViewModel` por pista.
-2. Un clic en una fila (o **PLAY ALL**) ejecuta `PlayTrackCommand` → `PlayerViewModel.Play`.
-3. `PlayerViewModel` llama a `IAudioPlayer.Play(filePath)` y un `DispatcherTimer` de 250 ms
-   refresca posición, duración y `Progress` (0..1) para la forma de onda.
-4. `WaveformScrubber` dibuja barras deterministas a partir de `Track.Seed`; al hacer clic
-   o arrastrar invoca `SeekCommand` con la fracción.
-5. Al terminar una pista, `PlaybackEnded` se traslada al hilo de UI y pasa a la siguiente.
+2. Tocar una fila ejecuta `PlayTrackCommand` → `PlayerViewModel.Play`.
+3. `PlayerViewModel` llama a `IAudioPlayer.Play(filePath)` y un `System.Threading.Timer`
+   de 250 ms, marshallado a UI vía `IUiDispatcher`, refresca posición, duración y
+   `Progress` (0..1) para la forma de onda.
+4. `WaveformScrubber` (un `GraphicsView`) dibuja barras deterministas a partir de
+   `Track.Seed`; al tocar o arrastrar (`StartInteraction`/`DragInteraction`/
+   `EndInteraction`) invoca `SeekCommand` con la fracción.
+5. Al terminar una pista, `PlaybackEnded` se traslada al hilo de UI vía `IUiDispatcher` y
+   pasa a la siguiente.
 
 ## Flujo de una descarga
 
@@ -158,6 +184,7 @@ Dos paneles dentro de un `Grid` (`MainWindow.axaml`):
 
 - [x] Motor de descarga con `yt-dlp` que guarda el MP3 en la carpeta de música del usuario.
 - [x] Reproductor local con UI de dos paneles, lista de biblioteca y barra de reproducción.
+- [x] Migración de Avalonia UI a .NET MAUI (Windows + macOS/Mac Catalyst).
 - [ ] Reporte de progreso robusto y cancelación desde la UI.
 - [ ] Cola de reproducción editable, orden aleatorio y repetición.
 - [ ] Migraciones de EF Core y pantalla de historial de descargas.

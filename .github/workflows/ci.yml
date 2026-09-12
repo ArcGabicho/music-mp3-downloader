@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [windows-latest, macos-latest]
 
     steps:
       - name: Checkout
@@ -35,6 +35,9 @@ jobs:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.slnx') }}
           restore-keys: ${{ runner.os }}-nuget-
+
+      - name: Restore .NET MAUI workload
+        run: dotnet workload restore ${{ env.SOLUTION }}
 
       - name: Restore
         run: dotnet restore ${{ env.SOLUTION }}
@@ -61,7 +64,7 @@ jobs:
 
   format:
     name: Verify formatting
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -70,6 +73,9 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore .NET MAUI workload
+        run: dotnet workload restore ${{ env.SOLUTION }}
 
       - name: Restore
         run: dotnet restore ${{ env.SOLUTION }}
@@ -86,12 +92,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - rid: linux-x64
-            runner: ubuntu-latest
           - rid: win-x64
             runner: windows-latest
-          - rid: osx-arm64
+            tfm: net10.0-windows10.0.19041.0
+          - rid: maccatalyst
             runner: macos-latest
+            tfm: net10.0-maccatalyst
 
     steps:
       - name: Checkout
@@ -102,13 +108,27 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Publish
+      - name: Restore .NET MAUI workload
+        run: dotnet workload restore ${{ env.SOLUTION }}
+
+      - name: Publish (Windows)
+        if: matrix.rid == 'win-x64'
         run: >
           dotnet publish core/MusicMp3Downloader.App.csproj
           --configuration ${{ env.CONFIGURATION }}
-          --runtime ${{ matrix.rid }}
+          --framework ${{ matrix.tfm }}
+          --runtime win-x64
           --self-contained true
-          -p:PublishSingleFile=true
+          -p:WindowsPackageType=None
+          -p:WindowsAppSDKSelfContained=true
+          --output ./publish/${{ matrix.rid }}
+
+      - name: Publish (Mac Catalyst)
+        if: matrix.rid == 'maccatalyst'
+        run: >
+          dotnet publish core/MusicMp3Downloader.App.csproj
+          --configuration ${{ env.CONFIGURATION }}
+          --framework ${{ matrix.tfm }}
           --output ./publish/${{ matrix.rid }}
 
       - name: Upload build artifact

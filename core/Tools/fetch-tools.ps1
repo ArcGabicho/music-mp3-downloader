@@ -37,10 +37,9 @@ function Expand-One([string]$Url, [string]$LeafName, [string]$OutFile) {
 # ---------------- yt-dlp ----------------
 if (-not (Test-Path $ytDlpOut)) {
     $asset = switch -Wildcard ($Rid) {
-        'win-*'       { 'yt-dlp.exe' }
-        'osx-*'       { 'yt-dlp_macos' }
-        'linux-arm64' { 'yt-dlp_linux_aarch64' }
-        default       { 'yt-dlp_linux' }
+        'win-*' { 'yt-dlp.exe' }
+        'osx-*' { 'yt-dlp_macos' }
+        default { throw "RID no soportado: $Rid" }
     }
     Write-Host "· yt-dlp ($asset)"
     Invoke-WebRequest "https://github.com/yt-dlp/yt-dlp/releases/latest/download/$asset" -OutFile $ytDlpOut
@@ -52,9 +51,13 @@ if (-not (Test-Path $ffmpegOut)) {
         Write-Host "· ffmpeg (BtbN, winarm64 lgpl)"
         Expand-One "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-winarm64-lgpl.zip" 'ffmpeg.exe' $ffmpegOut
     }
-    else {
+    elseif ($isWin) {
         Write-Host "· ffmpeg (gyan.dev, essentials)"
         Expand-One "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip" 'ffmpeg.exe' $ffmpegOut
+    }
+    else {
+        Write-Host "· ffmpeg (evermeet.cx)"
+        Expand-One "https://evermeet.cx/ffmpeg/getrelease/ffmpeg/zip" 'ffmpeg' $ffmpegOut
     }
 }
 

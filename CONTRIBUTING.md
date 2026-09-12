@@ -6,25 +6,27 @@ el flujo de trabajo, los estándares de código y qué se espera de una Pull Req
 ## Requisitos previos
 
 - [.NET SDK 10.0+](https://dotnet.microsoft.com/download/dotnet/10.0)
+- El workload de .NET MAUI: `dotnet workload install maui`
 - Git
-- **Linux:** `libvlc` para la reproducción de audio — `sudo pacman -S vlc` / `sudo apt install vlc`. En Windows y macOS llega por NuGet.
+- Solo se compila/ejecuta en **Windows** o **macOS**; MAUI no soporta escritorio Linux.
 
 `yt-dlp` y `FFmpeg` **no** hace falta instalarlos: el build los descarga como binarios
 autónomos en `core/Tools/<rid>/` (ver [`core/Tools/README.md`](core/Tools/README.md)).
 La primera compilación necesita conexión; para compilar sin red usa
 `dotnet build -p:BundleExternalTools=false`.
 
-Editor recomendado: Visual Studio 2022+, JetBrains Rider o VS Code con el SDK de C#.
-Para la vista previa de Avalonia instala la extensión oficial de Avalonia.
+Editor recomendado: Visual Studio 2022+ (con la carga de trabajo ".NET Multi-platform App UI")
+o JetBrains Rider con el plugin de .NET MAUI.
 
 ## Puesta en marcha
 
 ```bash
 git clone https://github.com/ArcGabicho/music-mp3-downloader.git
 cd music-mp3-downloader
+dotnet workload restore MusicMp3Downloader.slnx
 dotnet restore MusicMp3Downloader.slnx
 dotnet build MusicMp3Downloader.slnx
-dotnet run --project core/MusicMp3Downloader.App.csproj
+dotnet run --project core/MusicMp3Downloader.App.csproj -f net10.0-windows10.0.19041.0   # o net10.0-maccatalyst en macOS
 ```
 
 Antes de escribir código, lee el [perfil del proyecto](docs/app-overview.md) para
@@ -62,23 +64,21 @@ Compilación de desarrollo:
 dotnet build MusicMp3Downloader.slnx --configuration Debug
 ```
 
-Publicación local de un ejecutable autónomo (self-contained, un solo archivo):
+Publicación local de una carpeta autónoma (self-contained):
 
 ```bash
 # Windows
 dotnet publish core/MusicMp3Downloader.App.csproj \
-  -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
+  -c Release -f net10.0-windows10.0.19041.0 -r win-x64 --self-contained true \
+  -p:WindowsPackageType=None -p:WindowsAppSDKSelfContained=true
 
-# macOS (Apple Silicon)
+# macOS (universal x64+arm64, produce un bundle .app)
 dotnet publish core/MusicMp3Downloader.App.csproj \
-  -c Release -r osx-arm64 --self-contained true -p:PublishSingleFile=true
-
-# Linux
-dotnet publish core/MusicMp3Downloader.App.csproj \
-  -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true
+  -c Release -f net10.0-maccatalyst
 ```
 
-El binario resultante queda en `core/bin/Release/net10.0/<rid>/publish/`.
+El resultado queda en `core/bin/Release/<tfm>/<rid>/publish/` (Windows) o como un `.app`
+bajo `core/bin/Release/net10.0-maccatalyst/.../publish/` (macOS).
 
 La publicación oficial (GitHub Releases) la automatiza `deploy.yml`; no crees tags ni
 subas releases a mano. Ver [Guía de CI/CD](docs/ci-guide.md).
@@ -99,7 +99,7 @@ Cada `push` y `pull_request` sobre `master` dispara `.github/workflows/ci.yml`:
 
 | Job       | Descripción                                                                 |
 |-----------|---------------------------------------------------------------------------|
-| `build`   | Restaura, compila y ejecuta las pruebas en `ubuntu-latest`, `windows-latest` y `macos-latest`. |
+| `build`   | Restaura, compila y ejecuta las pruebas en `windows-latest` y `macos-latest`. |
 | `format`  | Verifica el estilo con `dotnet format --verify-no-changes`.                |
 | `publish` | Solo en `push` a `master`: genera binarios self-contained como artefactos. |
 
@@ -110,14 +110,15 @@ El detalle completo, incluido el workflow de despliegue, está en [docs/ci-guide
 - Sigue las convenciones por defecto de `dotnet format` (basadas en `.editorconfig` cuando exista).
 - `Nullable` está activado: no introduzcas advertencias de nulabilidad.
 - Un tipo por archivo; el nombre del archivo coincide con el del tipo.
-- Respeta la ubicación por carpeta dentro de `core/`:
-  - `Views/` — `.axaml` y su code-behind, namespace `MusicMp3Downloader.App.Views`
-  - `ViewModels/` — deriva de `ViewModelBase`; usa los generadores de `CommunityToolkit.Mvvm` (`[ObservableProperty]`, `[RelayCommand]`)
-  - `Models/` — POCOs de dominio, sin dependencias de UI
-  - `Services/` — una interfaz `IFoo` + su implementación `Foo`, registradas en `App.ConfigureServices`
-  - `Data/` — entidades y `AppDbContext`; accede a la base vía `IDbContextFactory<AppDbContext>`
-- Cada `FooViewModel` se resuelve a `Views/FooView.axaml` mediante `ViewLocator`; mantén esa convención de nombres.
-- Usa enlaces compilados en XAML (`x:DataType`).
+- El código se reparte en dos proyectos dentro de `core/`:
+  - `core/Core/MusicMp3Downloader.Core.csproj` — class library sin dependencias de MAUI:
+    `Models/`, `Services/`, `Data/`, `ViewModels/` (deriva de `ViewModelBase`; usa los
+    generadores de `CommunityToolkit.Mvvm`: `[ObservableProperty]`, `[RelayCommand]`).
+    `Services/` sigue el patrón interfaz `IFoo` + implementación `Foo`.
+  - `core/` (proyecto MAUI) — `Views/` (`.xaml` + code-behind), `Styles/`, `Controls/`,
+    `Converters/`, `MauiProgram.cs` (DI, `IServiceCollection`) y `Platforms/`.
+- Usa enlaces compilados en XAML (`x:DataType`) y `StyleClass` para reutilizar estilos
+  (ver `Styles/AppStyles.xaml`).
 
 ## Mensajes de commit
 
@@ -142,7 +143,7 @@ docs: documentar el workflow de deploy
 Una PR debe:
 
 - Tener un objetivo único y acotado.
-- Pasar CI (build + test + format) en las tres plataformas.
+- Pasar CI (build + test + format) en Windows y macOS.
 - Incluir pruebas en `test/` cuando añada lógica no trivial.
 - Actualizar la documentación afectada (`README.md`, `docs/`).
 - Describir **qué** cambia y **por qué**, y cómo probarlo.

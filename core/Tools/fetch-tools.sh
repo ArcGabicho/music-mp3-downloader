@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # Descarga binarios autónomos de yt-dlp + ffmpeg para un RID concreto en core/tools/<rid>/.
 # Lo invoca el build (target FetchExternalTools) y también puede ejecutarse a mano:
-#     bash core/tools/fetch-tools.sh linux-x64
+#     bash core/tools/fetch-tools.sh win-x64
 #
 # No instala nada en el sistema: todo queda dentro de la carpeta del proyecto.
 set -euo pipefail
 
-RID="${1:?Uso: fetch-tools.sh <rid>   (linux-x64 | linux-arm64 | win-x64 | win-arm64 | osx-x64 | osx-arm64)}"
+RID="${1:?Uso: fetch-tools.sh <rid>   (win-x64 | win-arm64 | osx-x64 | osx-arm64)}"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DEST="$HERE/$RID"
 mkdir -p "$DEST"
@@ -36,8 +36,6 @@ extract_to() { # <archivo> <name> <dest>
 # ---------------- yt-dlp ----------------
 if [[ ! -f "$YTDLP_OUT" ]]; then
   case "$RID" in
-    linux-x64)         asset="yt-dlp_linux" ;;
-    linux-arm64)       asset="yt-dlp_linux_aarch64" ;;
     win-x64|win-arm64) asset="yt-dlp.exe" ;;
     osx-x64|osx-arm64) asset="yt-dlp_macos" ;;
     *) echo "RID no soportado: $RID" >&2; exit 1 ;;
@@ -51,14 +49,6 @@ fi
 if [[ ! -f "$FFMPEG_OUT" ]]; then
   tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
   case "$RID" in
-    linux-x64)
-      echo "· ffmpeg (johnvansickle, static)"
-      fetch "https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz" "$tmp/ff.tar.xz"
-      extract_to "$tmp/ff.tar.xz" ffmpeg "$FFMPEG_OUT" ;;
-    linux-arm64)
-      echo "· ffmpeg (johnvansickle, static)"
-      fetch "https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-arm64-static.tar.xz" "$tmp/ff.tar.xz"
-      extract_to "$tmp/ff.tar.xz" ffmpeg "$FFMPEG_OUT" ;;
     win-x64)
       echo "· ffmpeg (gyan.dev, essentials)"
       fetch "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip" "$tmp/ff.zip"

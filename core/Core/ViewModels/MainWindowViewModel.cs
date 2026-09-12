@@ -2,7 +2,6 @@ using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Threading.Tasks;
-using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MusicMp3Downloader.App.Services;
@@ -30,7 +29,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private TrackViewModel? _selectedTrack;
 
     [ObservableProperty]
-    private Bitmap? _coverArt;
+    private byte[]? _coverArt;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(DownloadCommand))]
@@ -143,7 +142,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         if (e.PropertyName == nameof(PlayerViewModel.Current))
         {
-            CoverArt = Player.Current?.Cover;
+            CoverArt = Player.Current?.CoverArtBytes;
         }
     }
 }

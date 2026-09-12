@@ -1,4 +1,6 @@
-<ResourceDictionary xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+<?xml version="1.0" encoding="UTF-8" ?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
 
     <Color x:Key="BgRight">#0C0C0F</Color>
     <Color x:Key="Panel">#141418</Color>
@@ -9,6 +11,7 @@
     <Color x:Key="TextSecondary">#9C9CA7</Color>
     <Color x:Key="TextFaint">#5B5B67</Color>
     <Color x:Key="Accent">#FF2D46</Color>
+    <Color x:Key="AccentHover">#FF4A5C</Color>
 
     <SolidColorBrush x:Key="BgRightBrush" Color="{StaticResource BgRight}" />
     <SolidColorBrush x:Key="PanelBrush" Color="{StaticResource Panel}" />
@@ -19,16 +22,16 @@
     <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondary}" />
     <SolidColorBrush x:Key="TextFaintBrush" Color="{StaticResource TextFaint}" />
     <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource Accent}" />
+    <SolidColorBrush x:Key="AccentHoverBrush" Color="{StaticResource AccentHover}" />
     <SolidColorBrush x:Key="ScrimBrush" Color="#D8070708" />
-    <SolidColorBrush x:Key="IconOutlineBrush" Color="#30FFFFFF" />
 
-    <LinearGradientBrush x:Key="ArtworkGradient" StartPoint="0%,0%" EndPoint="100%,100%">
+    <LinearGradientBrush x:Key="ArtworkGradient" StartPoint="0,0" EndPoint="1,1">
         <GradientStop Offset="0" Color="#FF3145" />
         <GradientStop Offset="0.5" Color="#7A2A82" />
         <GradientStop Offset="1" Color="#2438E8" />
     </LinearGradientBrush>
 
-    <LinearGradientBrush x:Key="ArtworkScrim" StartPoint="0%,0%" EndPoint="0%,100%">
+    <LinearGradientBrush x:Key="ArtworkScrim" StartPoint="0,0" EndPoint="0,1">
         <GradientStop Offset="0" Color="#59000000" />
         <GradientStop Offset="0.4" Color="#14000000" />
         <GradientStop Offset="1" Color="#E4000000" />

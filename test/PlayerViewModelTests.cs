@@ -24,7 +24,7 @@ public class PlayerViewModelTests
     public void Play_sets_current_and_marks_track_playing()
     {
         var fake = new FakeAudioPlayer();
-        var vm = new PlayerViewModel(fake);
+        var vm = new PlayerViewModel(fake, new ImmediateUiDispatcher());
         var tracks = Queue(3);
         vm.SetQueue(tracks);
 
@@ -38,7 +38,7 @@ public class PlayerViewModelTests
     [Fact]
     public void Next_advances_and_wraps_to_start()
     {
-        var vm = new PlayerViewModel(new FakeAudioPlayer());
+        var vm = new PlayerViewModel(new FakeAudioPlayer(), new ImmediateUiDispatcher());
         var tracks = Queue(3);
         vm.SetQueue(tracks);
         vm.Play(tracks[0]);
@@ -56,7 +56,7 @@ public class PlayerViewModelTests
     public void Previous_restarts_track_when_past_three_seconds()
     {
         var fake = new FakeAudioPlayer();
-        var vm = new PlayerViewModel(fake);
+        var vm = new PlayerViewModel(fake, new ImmediateUiDispatcher());
         var tracks = Queue(3);
         vm.SetQueue(tracks);
         vm.Play(tracks[1]);
@@ -71,7 +71,7 @@ public class PlayerViewModelTests
     [Fact]
     public void Previous_goes_to_previous_track_near_the_start()
     {
-        var vm = new PlayerViewModel(new FakeAudioPlayer());
+        var vm = new PlayerViewModel(new FakeAudioPlayer(), new ImmediateUiDispatcher());
         var tracks = Queue(3);
         vm.SetQueue(tracks);
         vm.Play(tracks[1]);
@@ -85,7 +85,7 @@ public class PlayerViewModelTests
     public void PlayPause_toggles_pause_then_resume()
     {
         var fake = new FakeAudioPlayer();
-        var vm = new PlayerViewModel(fake);
+        var vm = new PlayerViewModel(fake, new ImmediateUiDispatcher());
         var tracks = Queue(2);
         vm.SetQueue(tracks);
         vm.Play(tracks[0]);
@@ -102,7 +102,7 @@ public class PlayerViewModelTests
     [Fact]
     public void PlayPause_with_nothing_playing_starts_first_queued_track()
     {
-        var vm = new PlayerViewModel(new FakeAudioPlayer());
+        var vm = new PlayerViewModel(new FakeAudioPlayer(), new ImmediateUiDispatcher());
         var tracks = Queue(2);
         vm.SetQueue(tracks);
 
@@ -115,7 +115,7 @@ public class PlayerViewModelTests
     public void Seek_clamps_fraction_and_mirrors_progress()
     {
         var fake = new FakeAudioPlayer { Duration = TimeSpan.FromSeconds(200) };
-        var vm = new PlayerViewModel(fake);
+        var vm = new PlayerViewModel(fake, new ImmediateUiDispatcher());
 
         vm.SeekCommand.Execute(1.5);
 
@@ -126,7 +126,7 @@ public class PlayerViewModelTests
     [Fact]
     public void Header_and_title_reflect_the_current_track()
     {
-        var vm = new PlayerViewModel(new FakeAudioPlayer());
+        var vm = new PlayerViewModel(new FakeAudioPlayer(), new ImmediateUiDispatcher());
         var tracks = new List<TrackViewModel>
         {
             new(new Track { FilePath = "/m/1.mp3", Title = "Hello", Artist = "Adele", Year = 2015 }, 1),

@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:MusicMp3Downloader.App.ViewModels;assembly=MusicMp3Downloader.Core"
+             xmlns:ctrl="clr-namespace:MusicMp3Downloader.App.Controls"
+             xmlns:conv="clr-namespace:MusicMp3Downloader.App.Converters"
+             x:Class="MusicMp3Downloader.App.Views.MainPage"
+             x:Name="RootPage"
+             x:DataType="vm:MainWindowViewModel"
+             Title="Music MP3 Downloader">
+
+    <ContentPage.Resources>
+        <conv:ByteArrayToImageSourceConverter x:Key="ByteArrayToImageSource" />
+        <conv:IsNotNullConverter x:Key="IsNotNull" />
+        <conv:InvertedBoolConverter x:Key="InvertedBool" />
+    </ContentPage.Resources>
+
+    <Grid ColumnDefinitions="Auto,*">
+
+        <!-- ============ PANEL IZQUIERDO / PORTADA ============ -->
+        <Grid Grid.Column="0" WidthRequest="430" IsVisible="{Binding IsWide}" IsClippedToBounds="True">
+            <Grid Background="{StaticResource ArtworkGradient}" />
+            <Image Source="{Binding CoverArt, Converter={StaticResource ByteArrayToImageSource}}"
+                   Aspect="AspectFill"
+                   IsVisible="{Binding CoverArt, Converter={StaticResource IsNotNull}}" />
+            <Grid Background="{StaticResource ArtworkScrim}" />
+
+            <HorizontalStackLayout Margin="36,32" VerticalOptions="Start" HorizontalOptions="Start" Spacing="11">
+                <HorizontalStackLayout Spacing="3" VerticalOptions="Center">
+                    <BoxView WidthRequest="3" HeightRequest="9" Color="White" VerticalOptions="End" />
+                    <BoxView WidthRequest="3" HeightRequest="16" Color="White" VerticalOptions="End" />
+                    <BoxView WidthRequest="3" HeightRequest="6" Color="White" VerticalOptions="End" />
+                    <BoxView WidthRequest="3" HeightRequest="12" Color="White" VerticalOptions="End" />
+                </HorizontalStackLayout>
+                <Label Text="MUSIC MP3" StyleClass="brand" TextColor="White" VerticalOptions="Center" />
+            </HorizontalStackLayout>
+        </Grid>
+
+        <!-- ============ PANEL DERECHO / LISTA ============ -->
+        <Grid Grid.Column="1" RowDefinitions="Auto,Auto,*,Auto" BackgroundColor="{StaticResource BgRight}">
+
+            <!-- Barra superior -->
+            <Grid Grid.Row="0" Margin="38,24,28,0" ColumnDefinitions="Auto,*,Auto">
+                <HorizontalStackLayout Spacing="3" VerticalOptions="Center">
+                    <BoxView WidthRequest="3" HeightRequest="7" Color="{StaticResource TextFaint}" VerticalOptions="End" />
+                    <BoxView WidthRequest="3" HeightRequest="13" Color="{StaticResource TextFaint}" VerticalOptions="End" />
+                    <BoxView WidthRequest="3" HeightRequest="6" Color="{StaticResource TextFaint}" VerticalOptions="End" />
+                    <BoxView WidthRequest="3" HeightRequest="10" Color="{StaticResource TextFaint}" VerticalOptions="End" />
+                </HorizontalStackLayout>
+                <Border Grid.Column="2" StyleClass="iconGhost">
+                    <Path Data="M10,1 L10,19 M1,10 L19,10" Stroke="{StaticResource TextPrimaryBrush}"
+                          StrokeThickness="2" StrokeLineCap="Round"
+                          HorizontalOptions="Center" VerticalOptions="Center" />
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding ToggleDownloadPanelCommand}" />
+                    </Border.GestureRecognizers>
+                </Border>
+            </Grid>
+
+            <!-- Cabecera -->
+            <VerticalStackLayout Grid.Row="1" Margin="40,24,40,0" Spacing="12">
+                <HorizontalStackLayout Spacing="7">
+                    <Label Text="{Binding Player.HeaderArtist}" StyleClass="eyebrow" />
+                    <Label Text="/" StyleClass="eyebrow" TextColor="{StaticResource AccentBrush}" />
+                    <Label Text="{Binding Player.HeaderYear}" StyleClass="eyebrow" TextColor="{StaticResource AccentBrush}" />
+                </HorizontalStackLayout>
+                <Label Text="{Binding Player.BigTitle}" StyleClass="h1"
+                       LineBreakMode="TailTruncation" MaxLines="2" />
+                <Label Text="{Binding LibraryStatus}" StyleClass="rowTime" />
+                <Label Text="{Binding Player.StatusMessage}" StyleClass="rowTime"
+                       TextColor="{StaticResource AccentBrush}" LineBreakMode="WordWrap"
+                       IsVisible="{Binding Player.StatusMessage, Converter={StaticResource IsNotNull}}" />
+            </VerticalStackLayout>
+
+            <!-- Lista de pistas -->
+            <CollectionView Grid.Row="2" Margin="24,20,14,10"
+                             ItemsSource="{Binding Tracks}" SelectionMode="None">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:TrackViewModel">
+                        <Grid ColumnDefinitions="30,46,*,Auto" HeightRequest="46">
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding Source={x:Reference RootPage}, Path=BindingContext.PlayTrackCommand}"
+                                    CommandParameter="{Binding .}" />
+                            </Grid.GestureRecognizers>
+
+                            <Grid Grid.Column="0" VerticalOptions="Center" HorizontalOptions="Start">
+                                <Path Data="M0,0 L9,5 L0,10 Z" Fill="{StaticResource TextFaintBrush}"
+                                      IsVisible="{Binding IsPlaying, Converter={StaticResource InvertedBool}}" />
+                                <HorizontalStackLayout Spacing="3" IsVisible="{Binding IsPlaying}">
+                                    <BoxView WidthRequest="3" HeightRequest="11" Color="{StaticResource Accent}" />
+                                    <BoxView WidthRequest="3" HeightRequest="11" Color="{StaticResource Accent}" />
+                                </HorizontalStackLayout>
+                            </Grid>
+                            <Label Grid.Column="1" Text="{Binding IndexLabel}" StyleClass="rowIndex">
+                                <Label.Triggers>
+                                    <DataTrigger TargetType="Label" Binding="{Binding IsPlaying}" Value="True">
+                                        <Setter Property="TextColor" Value="{StaticResource AccentBrush}" />
+                                    </DataTrigger>
+                                </Label.Triggers>
+                            </Label>
+                            <Label Grid.Column="2" Text="{Binding Title}" StyleClass="rowTitle">
+                                <Label.Triggers>
+                                    <DataTrigger TargetType="Label" Binding="{Binding IsPlaying}" Value="True">
+                                        <Setter Property="TextColor" Value="{StaticResource AccentBrush}" />
+                                    </DataTrigger>
+                                </Label.Triggers>
+                            </Label>
+                            <Label Grid.Column="3" Text="{Binding DurationText}" StyleClass="rowTime" Margin="14,0,8,0" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- Barra de reproducción -->
+            <Border Grid.Row="3" BackgroundColor="{StaticResource Panel}"
+                    Stroke="{StaticResource HairlineBrush}" StrokeThickness="1,0,0,0"
+                    Padding="30,0" HeightRequest="94">
+                <Grid ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto" VerticalOptions="Center">
+
+                    <Label Grid.Row="0" Grid.Column="1" StyleClass="nowLabel" Margin="20,0,20,8"
+                           Text="{Binding Player.NowPlayingLabel, FallbackValue='SIN REPRODUCCIÓN'}" />
+
+                    <HorizontalStackLayout Grid.Row="1" Grid.Column="0" Spacing="8" VerticalOptions="Center">
+                        <Border StyleClass="transport" VerticalOptions="Center">
+                            <Path Data="M0,0 L2.5,0 L2.5,14 L0,14 Z M13,0 L3,7 L13,14 Z"
+                                  Fill="{StaticResource TextPrimaryBrush}"
+                                  HorizontalOptions="Center" VerticalOptions="Center" />
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Player.PreviousCommand}" />
+                            </Border.GestureRecognizers>
+                        </Border>
+                        <Border StyleClass="transportMain" VerticalOptions="Center">
+                            <Grid WidthRequest="16" HeightRequest="16">
+                                <Path Data="M0,0 L13,8 L0,16 Z" Fill="{StaticResource BgRightBrush}"
+                                      HorizontalOptions="Center" VerticalOptions="Center" Margin="2,0,0,0"
+                                      IsVisible="{Binding Player.IsPlaying, Converter={StaticResource InvertedBool}}" />
+                                <HorizontalStackLayout Spacing="4" HorizontalOptions="Center" VerticalOptions="Center"
+                                                        IsVisible="{Binding Player.IsPlaying}">
+                                    <BoxView WidthRequest="4" HeightRequest="15" Color="{StaticResource BgRight}" />
+                                    <BoxView WidthRequest="4" HeightRequest="15" Color="{StaticResource BgRight}" />
+                                </HorizontalStackLayout>
+                            </Grid>
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Player.PlayPauseCommand}" />
+                            </Border.GestureRecognizers>
+                        </Border>
+                        <Border StyleClass="transport" VerticalOptions="Center">
+                            <Path Data="M11.5,0 L14,0 L14,14 L11.5,14 Z M1,0 L11,7 L1,14 Z"
+                                  Fill="{StaticResource TextPrimaryBrush}"
+                                  HorizontalOptions="Center" VerticalOptions="Center" />
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Player.NextCommand}" />
+                            </Border.GestureRecognizers>
+                        </Border>
+                    </HorizontalStackLayout>
+
+                    <ctrl:WaveformScrubber Grid.Row="1" Grid.Column="1" HeightRequest="34" Margin="20,0"
+                                           VerticalOptions="Center"
+                                           Progress="{Binding Player.Progress}"
+                                           Seed="{Binding Player.Seed}"
+                                           IsScrubbing="{Binding Player.IsScrubbing, Mode=TwoWay}"
+                                           SeekCommand="{Binding Player.SeekCommand}"
+                                           PlayedColor="{StaticResource Accent}"
+                                           RemainingColor="{StaticResource TextFaint}" />
+
+                    <HorizontalStackLayout Grid.Row="1" Grid.Column="2" Spacing="10" VerticalOptions="Center">
+                        <Border StyleClass="transport" WidthRequest="34" HeightRequest="34" VerticalOptions="Center">
+                            <Grid WidthRequest="18" HeightRequest="16">
+                                <Path Data="M0,5 L4,5 L9,1 L9,15 L4,11 L0,11 Z" Fill="{StaticResource TextSecondaryBrush}"
+                                      HorizontalOptions="Start" VerticalOptions="Center" />
+                                <Path Data="M12,5 L18,11 M18,5 L12,11" Stroke="{StaticResource AccentBrush}"
+                                      StrokeThickness="2" StrokeLineCap="Round" VerticalOptions="Center"
+                                      IsVisible="{Binding Player.IsMuted}" />
+                            </Grid>
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Player.ToggleMuteCommand}" />
+                            </Border.GestureRecognizers>
+                        </Border>
+                        <Slider WidthRequest="100" Minimum="0" Maximum="1" VerticalOptions="Center"
+                                Value="{Binding Player.Volume}" />
+                    </HorizontalStackLayout>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- ============ OVERLAY DESCARGA ============ -->
+        <Grid Grid.Column="0" Grid.ColumnSpan="2" IsVisible="{Binding IsDownloadPanelOpen}">
+            <Grid Background="{StaticResource ScrimBrush}">
+                <Grid.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding ToggleDownloadPanelCommand}" />
+                </Grid.GestureRecognizers>
+            </Grid>
+
+            <Border StyleClass="modal" WidthRequest="620" MaximumHeightRequest="470"
+                    VerticalOptions="Center" HorizontalOptions="Center">
+                <Grid RowDefinitions="Auto,Auto,Auto,*" RowSpacing="0">
+                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout VerticalOptions="Center" Spacing="3">
+                            <Label Text="DESCARGAR DE YOUTUBE" StyleClass="brand" />
+                            <Label Text="El MP3 se guarda en tu carpeta de música" StyleClass="hint" />
+                        </VerticalStackLayout>
+                        <Border Grid.Column="1" StyleClass="iconGhost" VerticalOptions="Start">
+                            <Path Data="M0,0 L13,13 M13,0 L0,13" Stroke="{StaticResource TextPrimaryBrush}"
+                                  StrokeThickness="2" StrokeLineCap="Round"
+                                  HorizontalOptions="Center" VerticalOptions="Center" />
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding ToggleDownloadPanelCommand}" />
+                            </Border.GestureRecognizers>
+                        </Border>
+                    </Grid>
+
+                    <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="0,22,0,0">
+                        <Entry Grid.Column="0" HeightRequest="42" VerticalOptions="Center"
+                               Placeholder="https://www.youtube.com/watch?v=…"
+                               Text="{Binding DownloadUrl}"
+                               ReturnCommand="{Binding DownloadCommand}" />
+                        <Button Grid.Column="1" StyleClass="pill" Text="Descargar" Margin="10,0,0,0"
+                                Command="{Binding DownloadCommand}" />
+                    </Grid>
+
+                    <Label Grid.Row="2" Text="{Binding DownloadStatus}" StyleClass="rowTime" Margin="2,12,0,0" />
+
+                    <CollectionView Grid.Row="3" Margin="0,16,0,0" ItemsSource="{Binding DownloadQueue}" SelectionMode="None">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="vm:DownloadItemViewModel">
+                                <Border StyleClass="downloadCard" Margin="0,0,0,10">
+                                    <VerticalStackLayout Spacing="7">
+                                        <Label Text="{Binding Title}" StyleClass="rowTitle" />
+                                        <HorizontalStackLayout Spacing="10">
+                                            <Label Text="{Binding Status}" StyleClass="rowTime" />
+                                            <ProgressBar WidthRequest="280" Progress="{Binding Progress}" />
+                                        </HorizontalStackLayout>
+                                        <Label Text="{Binding ErrorMessage}" LineBreakMode="WordWrap"
+                                               TextColor="{StaticResource AccentBrush}"
+                                               IsVisible="{Binding ErrorMessage, Converter={StaticResource IsNotNull}}" />
+                                    </VerticalStackLayout>
+                                </Border>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</ContentPage>

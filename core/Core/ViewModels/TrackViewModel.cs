@@ -1,6 +1,4 @@
-using System;
 using System.IO;
-using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MusicMp3Downloader.App.Models;
 
@@ -9,8 +7,6 @@ namespace MusicMp3Downloader.App.ViewModels;
 public partial class TrackViewModel : ViewModelBase
 {
     private readonly Track _track;
-    private Bitmap? _cover;
-    private bool _coverLoaded;
 
     [ObservableProperty]
     private bool _isPlaying;
@@ -51,30 +47,7 @@ public partial class TrackViewModel : ViewModelBase
         ? _track.Duration.ToString(@"h\:mm\:ss")
         : _track.Duration.ToString(@"m\:ss");
 
-    public Bitmap? Cover
-    {
-        get
-        {
-            if (!_coverLoaded)
-            {
-                _coverLoaded = true;
-                if (_track.CoverArt is { Length: > 0 } bytes)
-                {
-                    try
-                    {
-                        using var stream = new MemoryStream(bytes);
-                        _cover = new Bitmap(stream);
-                    }
-                    catch (Exception)
-                    {
-                        _cover = null;
-                    }
-                }
-            }
-
-            return _cover;
-        }
-    }
+    public byte[]? CoverArtBytes => _track.CoverArt;
 
     private static int ComputeSeed(string value)
     {

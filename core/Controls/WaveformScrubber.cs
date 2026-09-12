@@ -1,135 +1,122 @@
 using System;
 using System.Windows.Input;
-using Avalonia;
-using Avalonia.Controls;
-using Avalonia.Data;
-using Avalonia.Input;
-using Avalonia.Media;
+using Microsoft.Maui.Controls;
+using Microsoft.Maui.Graphics;
 
 namespace MusicMp3Downloader.App.Controls;
 
-public class WaveformScrubber : Control
+/// <summary>Barra de progreso con forma de onda determinista, dibujada a partir de <see cref="Seed"/>.</summary>
+public sealed class WaveformScrubber : GraphicsView, IDrawable
 {
-    public static readonly StyledProperty<double> ProgressProperty =
-        AvaloniaProperty.Register<WaveformScrubber, double>(nameof(Progress));
+    public static readonly BindableProperty ProgressProperty =
+        BindableProperty.Create(nameof(Progress), typeof(double), typeof(WaveformScrubber), 0d,
+            propertyChanged: (b, _, _) => ((WaveformScrubber)b).Invalidate());
 
-    public static readonly StyledProperty<int> SeedProperty =
-        AvaloniaProperty.Register<WaveformScrubber, int>(nameof(Seed));
+    public static readonly BindableProperty SeedProperty =
+        BindableProperty.Create(nameof(Seed), typeof(int), typeof(WaveformScrubber), 0,
+            propertyChanged: (b, _, _) => ((WaveformScrubber)b).Invalidate());
 
-    public static readonly StyledProperty<ICommand?> SeekCommandProperty =
-        AvaloniaProperty.Register<WaveformScrubber, ICommand?>(nameof(SeekCommand));
+    public static readonly BindableProperty SeekCommandProperty =
+        BindableProperty.Create(nameof(SeekCommand), typeof(ICommand), typeof(WaveformScrubber));
 
-    public static readonly StyledProperty<bool> IsScrubbingProperty =
-        AvaloniaProperty.Register<WaveformScrubber, bool>(
-            nameof(IsScrubbing), defaultBindingMode: BindingMode.TwoWay);
+    public static readonly BindableProperty IsScrubbingProperty =
+        BindableProperty.Create(nameof(IsScrubbing), typeof(bool), typeof(WaveformScrubber), false, BindingMode.TwoWay);
 
-    public static readonly StyledProperty<IBrush> PlayedBrushProperty =
-        AvaloniaProperty.Register<WaveformScrubber, IBrush>(nameof(PlayedBrush), Brushes.OrangeRed);
+    public static readonly BindableProperty PlayedColorProperty =
+        BindableProperty.Create(nameof(PlayedColor), typeof(Color), typeof(WaveformScrubber), Colors.OrangeRed,
+            propertyChanged: (b, _, _) => ((WaveformScrubber)b).Invalidate());
 
-    public static readonly StyledProperty<IBrush> RemainingBrushProperty =
-        AvaloniaProperty.Register<WaveformScrubber, IBrush>(nameof(RemainingBrush), Brushes.DimGray);
+    public static readonly BindableProperty RemainingColorProperty =
+        BindableProperty.Create(nameof(RemainingColor), typeof(Color), typeof(WaveformScrubber), Colors.DimGray,
+            propertyChanged: (b, _, _) => ((WaveformScrubber)b).Invalidate());
 
     private float[] _bars = Array.Empty<float>();
     private int _generatedSeed = int.MinValue;
     private int _generatedCount = -1;
 
-    static WaveformScrubber()
+    public WaveformScrubber()
     {
-        AffectsRender<WaveformScrubber>(
-            ProgressProperty, SeedProperty, PlayedBrushProperty, RemainingBrushProperty);
+        Drawable = this;
+        StartInteraction += OnStartInteraction;
+        DragInteraction += OnDragInteraction;
+        EndInteraction += OnEndInteraction;
+        SizeChanged += (_, _) => Invalidate();
     }
 
     public double Progress
     {
-        get => GetValue(ProgressProperty);
+        get => (double)GetValue(ProgressProperty);
         set => SetValue(ProgressProperty, value);
     }
 
     public int Seed
     {
-        get => GetValue(SeedProperty);
+        get => (int)GetValue(SeedProperty);
         set => SetValue(SeedProperty, value);
     }
 
     public ICommand? SeekCommand
     {
-        get => GetValue(SeekCommandProperty);
+        get => (ICommand?)GetValue(SeekCommandProperty);
         set => SetValue(SeekCommandProperty, value);
     }
 
     public bool IsScrubbing
     {
-        get => GetValue(IsScrubbingProperty);
+        get => (bool)GetValue(IsScrubbingProperty);
         set => SetValue(IsScrubbingProperty, value);
     }
 
-    public IBrush PlayedBrush
+    public Color PlayedColor
     {
-        get => GetValue(PlayedBrushProperty);
-        set => SetValue(PlayedBrushProperty, value);
+        get => (Color)GetValue(PlayedColorProperty);
+        set => SetValue(PlayedColorProperty, value);
     }
 
-    public IBrush RemainingBrush
+    public Color RemainingColor
     {
-        get => GetValue(RemainingBrushProperty);
-        set => SetValue(RemainingBrushProperty, value);
+        get => (Color)GetValue(RemainingColorProperty);
+        set => SetValue(RemainingColorProperty, value);
     }
 
-    public override void Render(DrawingContext context)
+    public void Draw(ICanvas canvas, RectF dirtyRect)
     {
-        var width = Bounds.Width;
-        var height = Bounds.Height;
+        var width = dirtyRect.Width;
+        var height = dirtyRect.Height;
         if (width <= 1 || height <= 1)
         {
             return;
         }
 
-        const double barWidth = 3d;
-        const double gap = 2d;
+        const float barWidth = 3f;
+        const float gap = 2f;
         var count = Math.Max(1, (int)(width / (barWidth + gap)));
         EnsureBars(count);
 
-        var midY = height / 2d;
-        var playX = width * Math.Clamp(Progress, 0d, 1d);
-        var x = 0d;
+        var midY = height / 2f;
+        var playX = width * (float)Math.Clamp(Progress, 0d, 1d);
+        var x = 0f;
 
         for (var i = 0; i < count; i++)
         {
-            var barHeight = 2d + (_bars[i] * (height - 4d));
-            var rect = new Rect(x, midY - (barHeight / 2d), barWidth, barHeight);
-            var brush = (x + barWidth) <= playX ? PlayedBrush : RemainingBrush;
-            context.FillRectangle(brush, rect, 1.5f);
+            var barHeight = 2f + (_bars[i] * (height - 4f));
+            canvas.FillColor = (x + barWidth) <= playX ? PlayedColor : RemainingColor;
+            canvas.FillRoundedRectangle(x, midY - (barHeight / 2f), barWidth, barHeight, 1.5f);
             x += barWidth + gap;
         }
     }
 
-    protected override void OnPointerPressed(PointerPressedEventArgs e)
+    private void OnStartInteraction(object? sender, TouchEventArgs e)
     {
-        base.OnPointerPressed(e);
-        e.Pointer.Capture(this);
         IsScrubbing = true;
-        UpdateProgressFrom(e.GetPosition(this).X);
+        UpdateProgressFrom(e.Touches);
     }
 
-    protected override void OnPointerMoved(PointerEventArgs e)
-    {
-        base.OnPointerMoved(e);
-        if (ReferenceEquals(e.Pointer.Captured, this))
-        {
-            UpdateProgressFrom(e.GetPosition(this).X);
-        }
-    }
+    private void OnDragInteraction(object? sender, TouchEventArgs e) => UpdateProgressFrom(e.Touches);
 
-    protected override void OnPointerReleased(PointerReleasedEventArgs e)
+    private void OnEndInteraction(object? sender, TouchEventArgs e)
     {
-        base.OnPointerReleased(e);
-        if (!ReferenceEquals(e.Pointer.Captured, this))
-        {
-            return;
-        }
-
-        e.Pointer.Capture(null);
-        UpdateProgressFrom(e.GetPosition(this).X);
+        UpdateProgressFrom(e.Touches);
         IsScrubbing = false;
 
         if (SeekCommand is { } command && command.CanExecute(Progress))
@@ -138,12 +125,14 @@ public class WaveformScrubber : Control
         }
     }
 
-    private void UpdateProgressFrom(double x)
+    private void UpdateProgressFrom(PointF[] touches)
     {
-        if (Bounds.Width > 0)
+        if (touches.Length == 0 || Width <= 0)
         {
-            Progress = Math.Clamp(x / Bounds.Width, 0d, 1d);
+            return;
         }
+
+        Progress = Math.Clamp(touches[0].X / Width, 0d, 1d);
     }
 
     private void EnsureBars(int count)
