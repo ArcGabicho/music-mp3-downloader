@@ -40,7 +40,7 @@
         <Grid Grid.Column="1" RowDefinitions="Auto,Auto,*,Auto" BackgroundColor="{StaticResource BgRight}">
 
             <!-- Barra superior -->
-            <Grid Grid.Row="0" Margin="38,24,28,0" ColumnDefinitions="Auto,*,Auto">
+            <Grid Grid.Row="0" Margin="36,28,36,0" ColumnDefinitions="Auto,*,Auto">
                 <HorizontalStackLayout Spacing="3" VerticalOptions="Center">
                     <BoxView WidthRequest="3" HeightRequest="7" Color="{StaticResource TextFaint}" VerticalOptions="End" />
                     <BoxView WidthRequest="3" HeightRequest="13" Color="{StaticResource TextFaint}" VerticalOptions="End" />
@@ -58,7 +58,7 @@
             </Grid>
 
             <!-- Cabecera -->
-            <VerticalStackLayout Grid.Row="1" Margin="40,24,40,0" Spacing="12">
+            <VerticalStackLayout Grid.Row="1" Margin="36,20,36,0" Spacing="12">
                 <HorizontalStackLayout Spacing="7">
                     <Label Text="{Binding Player.HeaderArtist}" StyleClass="eyebrow" />
                     <Label Text="/" StyleClass="eyebrow" TextColor="{StaticResource AccentBrush}" />
@@ -73,11 +73,11 @@
             </VerticalStackLayout>
 
             <!-- Lista de pistas -->
-            <CollectionView Grid.Row="2" Margin="24,20,14,10"
+            <CollectionView Grid.Row="2" Margin="36,24,28,10"
                              ItemsSource="{Binding Tracks}" SelectionMode="None">
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="vm:TrackViewModel">
-                        <Grid ColumnDefinitions="30,46,*,Auto" HeightRequest="46">
+                        <Grid ColumnDefinitions="30,46,*,Auto" HeightRequest="50" Margin="0,2">
                             <Grid.GestureRecognizers>
                                 <TapGestureRecognizer
                                     Command="{Binding Source={x:Reference RootPage}, Path=BindingContext.PlayTrackCommand}"
@@ -115,12 +115,12 @@
             <!-- Barra de reproducción -->
             <Grid Grid.Row="3" HeightRequest="94" BackgroundColor="{StaticResource Panel}">
                 <BoxView Color="{StaticResource Hairline}" HeightRequest="1" VerticalOptions="Start" />
-                <Grid Padding="30,0" ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto" VerticalOptions="Center">
+                <Grid Padding="36,0" ColumnDefinitions="Auto,*,Auto" RowDefinitions="Auto,Auto" RowSpacing="10" VerticalOptions="Center">
 
-                    <Label Grid.Row="0" Grid.Column="1" StyleClass="nowLabel" Margin="20,0,20,8"
+                    <Label Grid.Row="0" Grid.Column="1" StyleClass="nowLabel" Margin="24,0"
                            Text="{Binding Player.NowPlayingLabel, FallbackValue='SIN REPRODUCCIÓN'}" />
 
-                    <HorizontalStackLayout Grid.Row="1" Grid.Column="0" Spacing="8" VerticalOptions="Center">
+                    <HorizontalStackLayout Grid.Row="1" Grid.Column="0" Spacing="10" VerticalOptions="Center">
                         <Border StyleClass="transport" VerticalOptions="Center">
                             <Path Data="M0,0 L2.5,0 L2.5,14 L0,14 Z M13,0 L3,7 L13,14 Z"
                                   Fill="{StaticResource TextPrimaryBrush}"
@@ -154,7 +154,7 @@
                         </Border>
                     </HorizontalStackLayout>
 
-                    <ctrl:WaveformScrubber Grid.Row="1" Grid.Column="1" HeightRequest="34" Margin="20,0"
+                    <ctrl:WaveformScrubber Grid.Row="1" Grid.Column="1" HeightRequest="34" Margin="28,0"
                                            VerticalOptions="Center"
                                            Progress="{Binding Player.Progress}"
                                            Seed="{Binding Player.Seed}"
