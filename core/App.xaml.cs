@@ -23,13 +23,15 @@ public partial class App : Application
         // antes de que MainPage.xaml intente resolver sus StaticResource.
         var mainPage = _services.GetRequiredService<MainPage>();
 
+        // Tamaño de "popup" (como Mega/Discord): la ventana no es una app de escritorio
+        // normal, es el contenido que aparece al hacer clic en el ícono de la bandeja.
         return new Window(mainPage)
         {
             Title = "Music MP3 Downloader",
-            Width = 1180,
-            Height = 720,
-            MinimumWidth = 720,
-            MinimumHeight = 480,
+            Width = 440,
+            Height = 620,
+            MinimumWidth = 380,
+            MinimumHeight = 460,
         };
     }
 }

@@ -169,8 +169,8 @@
                 </Grid.GestureRecognizers>
             </Grid>
 
-            <Border StyleClass="modal" WidthRequest="620" MaximumHeightRequest="470"
-                    VerticalOptions="Center" HorizontalOptions="Center">
+            <Border StyleClass="modal" MaximumWidthRequest="560" MaximumHeightRequest="470"
+                    Margin="20" VerticalOptions="Center" HorizontalOptions="Fill">
                 <Grid RowDefinitions="Auto,Auto,Auto,*" RowSpacing="0">
                     <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
                         <VerticalStackLayout VerticalOptions="Center" Spacing="3">

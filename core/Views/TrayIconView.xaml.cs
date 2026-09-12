@@ -2,71 +2,77 @@ using System;
 using System.Linq;
 using CommunityToolkit.Mvvm.Input;
 using H.NotifyIcon;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Devices;
 
 namespace MusicMp3Downloader.App.Views;
 
-/// <summary>Ícono de la bandeja del sistema (solo Windows): alterna la mini-ventana emergente
-/// con el clic izquierdo y ofrece "Abrir ventana principal"/"Salir" con el clic derecho.</summary>
+/// <summary>Ícono de la bandeja del sistema (solo Windows): la app es únicamente de
+/// bandeja, sin ventana visible por defecto. El clic izquierdo alterna la visibilidad de
+/// la ventana principal, posicionándola cerca de la bandeja (igual que Mega/Discord); el
+/// clic derecho ofrece "Mostrar"/"Salir".</summary>
 public partial class TrayIconView : ContentView
 {
-    private const double MiniPlayerWidth = 340;
-    private const double MiniPlayerHeight = 230;
     private const double ScreenMargin = 16;
     private const double TaskbarAllowance = 64;
 
-    private readonly IServiceProvider _services;
-    private Window? _miniPlayerWindow;
-
-    public TrayIconView(IServiceProvider services)
+    public TrayIconView()
     {
-        _services = services;
         InitializeComponent();
         BindingContext = this;
     }
 
     [RelayCommand]
-    private void ToggleMiniPlayer()
+    private void ToggleMainWindow()
     {
-        try
+        var window = FindMainWindow();
+        if (window is null)
         {
-            if (_miniPlayerWindow is not null)
-            {
-                Application.Current?.CloseWindow(_miniPlayerWindow);
-                return;
-            }
-
-            var page = _services.GetRequiredService<MiniPlayerPage>();
-            var window = new Window(page)
-            {
-                Width = MiniPlayerWidth,
-                Height = MiniPlayerHeight,
-            };
-            PositionNearTray(window);
-
-            window.Destroying += (_, _) => _miniPlayerWindow = null;
-            _miniPlayerWindow = window;
-            Application.Current?.OpenWindow(window);
+            return;
         }
-        catch (Exception ex)
+
+        if (IsWindowVisible(window))
         {
-            System.IO.File.WriteAllText(
-                System.IO.Path.Combine(System.IO.Path.GetTempPath(), "mp3downloader-crash.log"),
-                $"[ToggleMiniPlayer] {ex}");
+            window.Hide();
+        }
+        else
+        {
+            PositionNearTray(window);
+            window.Show();
         }
     }
 
     [RelayCommand]
     private void ShowMainWindow()
     {
-        var window = Application.Current?.Windows.FirstOrDefault(w => w.Page is MainPage);
-        window?.Show();
+        var window = FindMainWindow();
+        if (window is null)
+        {
+            return;
+        }
+
+        PositionNearTray(window);
+        window.Show();
     }
 
     [RelayCommand]
     private void Exit() => Application.Current?.Quit();
+
+    private static Window? FindMainWindow() =>
+        Application.Current?.Windows.FirstOrDefault(w => w.Page is MainPage);
+
+    private static bool IsWindowVisible(Window window)
+    {
+        if (window.Handler?.PlatformView is not Microsoft.UI.Xaml.Window nativeWindow)
+        {
+            return false;
+        }
+
+        var handle = WinRT.Interop.WindowNative.GetWindowHandle(nativeWindow);
+        var windowId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(handle);
+        var appWindow = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(windowId);
+        return appWindow?.IsVisible ?? false;
+    }
 
     private static void PositionNearTray(Window window)
     {
@@ -79,7 +85,7 @@ public partial class TrayIconView : ContentView
         var screenWidth = display.Width / display.Density;
         var screenHeight = display.Height / display.Density;
 
-        window.X = Math.Max(0, screenWidth - MiniPlayerWidth - ScreenMargin);
-        window.Y = Math.Max(0, screenHeight - MiniPlayerHeight - TaskbarAllowance);
+        window.X = Math.Max(0, screenWidth - window.Width - ScreenMargin);
+        window.Y = Math.Max(0, screenHeight - window.Height - TaskbarAllowance);
     }
 }

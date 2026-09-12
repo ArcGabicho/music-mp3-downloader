@@ -9,11 +9,11 @@
     <tb:TaskbarIcon x:Name="TrayIcon"
                     IconSource="trayicon.ico"
                     ToolTipText="Music MP3 Downloader"
-                    LeftClickCommand="{Binding ToggleMiniPlayerCommand}"
+                    LeftClickCommand="{Binding ToggleMainWindowCommand}"
                     NoLeftClickDelay="True">
         <FlyoutBase.ContextFlyout>
             <MenuFlyout>
-                <MenuFlyoutItem Text="Abrir ventana principal" Command="{Binding ShowMainWindowCommand}" />
+                <MenuFlyoutItem Text="Mostrar" Command="{Binding ShowMainWindowCommand}" />
                 <MenuFlyoutSeparator />
                 <MenuFlyoutItem Text="Salir" Command="{Binding ExitCommand}" />
             </MenuFlyout>

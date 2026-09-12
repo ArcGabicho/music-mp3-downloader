@@ -56,6 +56,18 @@ public static class MauiProgram
                     args.Cancel = true;
                     Application.Current?.Windows.FirstOrDefault(w => w.Page is MainPage)?.Hide();
                 };
+
+                // La app es únicamente de bandeja: arranca oculta, solo aparece al hacer
+                // clic en el ícono (igual que Mega/Discord). Ocultarla ya aquí no sirve:
+                // MAUI la activa/muestra justo después de OnWindowCreated, pisando el
+                // Hide(); por eso se oculta en cuanto se activa por primera vez.
+                void HideOnFirstActivate(object? _, Microsoft.UI.Xaml.WindowActivatedEventArgs __)
+                {
+                    window.Activated -= HideOnFirstActivate;
+                    Application.Current?.Windows.FirstOrDefault(w => w.Page is MainPage)?.Hide();
+                }
+
+                window.Activated += HideOnFirstActivate;
             }));
         });
 #endif
@@ -88,7 +100,6 @@ public static class MauiProgram
         services.AddSingleton<PlayerViewModel>();
         services.AddSingleton<MainWindowViewModel>();
         services.AddTransient<MainPage>();
-        services.AddTransient<MiniPlayerPage>();
 
 #if WINDOWS
         services.AddSingleton<Views.TrayIconView>();
