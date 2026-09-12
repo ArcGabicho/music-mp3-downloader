@@ -36,10 +36,19 @@
   <Target Name="FetchExternalTools"
           BeforeTargets="Build;Publish"
           Condition="'$(BundleExternalTools)' == 'true' and '$(ExternalToolsRid)' != ''">
+    <!-- Cada Exec comprueba yt-dlp Y ffmpeg por separado: si uno de los dos no se
+         descargó (p. ej. por un fallo de red puntual), reintenta en el próximo build
+         en vez de darlo por "ya resuelto" solo porque el otro binario sí existe. -->
     <Exec Condition="!$([MSBuild]::IsOSPlatform('Windows')) and !Exists('$(ExternalToolsDir)/yt-dlp')"
           Command="bash &quot;$(ExternalToolsSourceRoot)/fetch-tools.sh&quot; $(ExternalToolsRid)"
           ContinueOnError="WarnAndContinue" />
+    <Exec Condition="!$([MSBuild]::IsOSPlatform('Windows')) and !Exists('$(ExternalToolsDir)/ffmpeg')"
+          Command="bash &quot;$(ExternalToolsSourceRoot)/fetch-tools.sh&quot; $(ExternalToolsRid)"
+          ContinueOnError="WarnAndContinue" />
     <Exec Condition="$([MSBuild]::IsOSPlatform('Windows')) and !Exists('$(ExternalToolsDir)/yt-dlp.exe')"
+          Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(ExternalToolsSourceRoot)\fetch-tools.ps1&quot; -Rid $(ExternalToolsRid)"
+          ContinueOnError="WarnAndContinue" />
+    <Exec Condition="$([MSBuild]::IsOSPlatform('Windows')) and !Exists('$(ExternalToolsDir)/ffmpeg.exe')"
           Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(ExternalToolsSourceRoot)\fetch-tools.ps1&quot; -Rid $(ExternalToolsRid)"
           ContinueOnError="WarnAndContinue" />
   </Target>
