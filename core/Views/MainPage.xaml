@@ -4,8 +4,9 @@
              xmlns:blazor="clr-namespace:Microsoft.AspNetCore.Components.WebView.Maui;assembly=Microsoft.AspNetCore.Components.WebView.Maui"
              xmlns:components="clr-namespace:MusicMp3Downloader.App.Components"
              x:Class="MusicMp3Downloader.App.Views.MainPage"
-             Title="Music MP3 Downloader">
-    <Grid>
+             Title="Music MP3 Downloader"
+             BackgroundColor="#0F0F11">
+    <Grid BackgroundColor="#0F0F11">
         <blazor:BlazorWebView HostPage="wwwroot/index.html">
             <blazor:BlazorWebView.RootComponents>
                 <blazor:RootComponent Selector="#app" ComponentType="{x:Type components:Player}" />
