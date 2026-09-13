@@ -2,22 +2,16 @@
     box-sizing: border-box;
 }
 
-html, body {
-    margin: 0;
-    height: 100%;
+.root {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
     background: #0C0C0F;
     font-family: 'Segoe UI', system-ui, sans-serif;
     color: #F4F4F6;
     overflow: hidden;
     -webkit-user-select: none;
     user-select: none;
-}
-
-.root {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    background: #0C0C0F;
 }
 
 /* ============ HEADER ============ */

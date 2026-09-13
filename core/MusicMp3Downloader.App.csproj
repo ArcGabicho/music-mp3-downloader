@@ -84,6 +84,17 @@
     <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
+  <!-- El glob de MAUI para su propio mecanismo de "CSS para controles nativos" (MauiCss)
+       reclama *.css sin distinguir el CSS isolation de Blazor (*.razor.css); además, a
+       diferencia de un proyecto Razor/Web normal, MAUI no agrega los .razor.css al item
+       Content por su cuenta (de ahí sale @(ScopedCssInput)). Sin ambas líneas, el bundle
+       de estilos con scope de cada componente nunca se genera y la UI se renderiza sin
+       ningún estilo. -->
+  <ItemGroup>
+    <MauiCss Remove="**\*.razor.css" />
+    <Content Include="**\*.razor.css" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="$(MauiVersion)" />
