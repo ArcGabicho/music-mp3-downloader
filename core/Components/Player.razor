@@ -1,0 +1,211 @@
+@implements IDisposable
+
+<div class="root">
+
+    <!-- ============ TARJETA "REPRODUCIENDO AHORA" ============ -->
+    <div class="header">
+        <div class="avatar">
+            @if (ViewModel.Player.Current?.CoverArtBytes is { Length: > 0 } cover)
+            {
+                <img src="@ToDataUri(cover)" alt="" />
+            }
+            else
+            {
+                <div class="avatar-dot"></div>
+            }
+        </div>
+        <div class="header-text">
+            <div class="title">@ViewModel.Player.NowPlayingTitle</div>
+            @if (ViewModel.Player.NowPlayingSubtitle is { } subtitle)
+            {
+                <div class="subtitle">@subtitle</div>
+            }
+        </div>
+        @if (ViewModel.Player.NowPlayingSubtitle is not null)
+        {
+            <div class="badge"><span class="badge-dot"></span>Descargado</div>
+        }
+        <button class="icon-ghost" title="Descargar de YouTube" @onclick="() => ViewModel.ToggleDownloadPanelCommand.Execute(null)">
+            <svg viewBox="0 0 20 20"><path d="M10 1v18M1 10h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+        </button>
+    </div>
+
+    <!-- ============ FORMA DE ONDA ============ -->
+    <div class="waveform-section">
+        <div class="waveform">
+            @foreach (var peak in ViewModel.Player.WaveformPeaks)
+            {
+                <span class="bar" style="height:@(Math.Max(0.12, peak) * 100)%"></span>
+            }
+        </div>
+        <div class="waveform-times">
+            <span>@ViewModel.Player.PositionText</span>
+            <span>@ViewModel.Player.DurationText</span>
+        </div>
+    </div>
+
+    <div class="hairline"></div>
+
+    <!-- ============ LISTA DE PISTAS ============ -->
+    <div class="track-list">
+        @if (ViewModel.IsLoading)
+        {
+            <div class="spinner"></div>
+        }
+        else if (ViewModel.Tracks.Count == 0)
+        {
+            <div class="empty">
+                <div class="empty-title">Tu biblioteca está vacía</div>
+                <div class="empty-hint">Descarga tu primera canción con el botón + de arriba</div>
+            </div>
+        }
+        else
+        {
+            @foreach (var track in ViewModel.Tracks)
+            {
+                <div class="track-row" @onclick="() => ViewModel.PlayTrackCommand.Execute(track)">
+                    <span class="track-index @(track.IsPlaying ? "playing" : "")">@track.IndexLabel</span>
+                    <span class="track-title @(track.IsPlaying ? "playing" : "")">@track.Title</span>
+                    <span class="track-time">@track.DurationText</span>
+                </div>
+            }
+        }
+    </div>
+
+    <!-- ============ BARRA DE REPRODUCCIÓN ============ -->
+    <div class="transport-bar">
+        <button class="transport" @onclick="() => ViewModel.Player.PreviousCommand.Execute(null)">
+            <svg viewBox="0 0 14 14"><path d="M0,0 L2.5,0 L2.5,14 L0,14 Z M13,0 L3,7 L13,14 Z" fill="currentColor" /></svg>
+        </button>
+        <button class="transport-main" @onclick="() => ViewModel.Player.PlayPauseCommand.Execute(null)">
+            @if (ViewModel.Player.IsPlaying)
+            {
+                <svg viewBox="0 0 14 14"><rect x="1" y="0" width="4" height="14" fill="#0C0C0F" /><rect x="9" y="0" width="4" height="14" fill="#0C0C0F" /></svg>
+            }
+            else
+            {
+                <svg viewBox="0 0 14 14"><path d="M0,0 L13,7 L0,14 Z" fill="#0C0C0F" /></svg>
+            }
+        </button>
+        <button class="transport" @onclick="() => ViewModel.Player.NextCommand.Execute(null)">
+            <svg viewBox="0 0 14 14"><path d="M11.5,0 L14,0 L14,14 L11.5,14 Z M1,0 L11,7 L1,14 Z" fill="currentColor" /></svg>
+        </button>
+        <span class="row-time">@ViewModel.Player.PositionText</span>
+        <input class="seek" type="range" min="0" max="1" step="0.001"
+               value="@ViewModel.Player.Progress"
+               @oninput="OnSeekInput" @onchange="OnSeekCommit" />
+        <span class="row-time">@ViewModel.Player.DurationText</span>
+        <button class="transport" @onclick="() => ViewModel.Player.ToggleMuteCommand.Execute(null)">
+            @if (ViewModel.Player.IsMuted)
+            {
+                <svg viewBox="0 0 20 16"><path d="M0,5 L4,5 L9,1 L9,15 L4,11 L0,11 Z" fill="currentColor" /><path d="M12,5 L18,11 M18,5 L12,11" stroke="#FF2D46" stroke-width="2" stroke-linecap="round" /></svg>
+            }
+            else
+            {
+                <svg viewBox="0 0 20 16"><path d="M0,5 L4,5 L9,1 L9,15 L4,11 L0,11 Z" fill="currentColor" /></svg>
+            }
+        </button>
+    </div>
+
+    <!-- ============ OVERLAY DESCARGA ============ -->
+    @if (ViewModel.IsDownloadPanelOpen)
+    {
+        <div class="scrim" @onclick="() => ViewModel.ToggleDownloadPanelCommand.Execute(null)"></div>
+        <div class="modal">
+            <div class="modal-header">
+                <div>
+                    <div class="brand">DESCARGAR DE YOUTUBE</div>
+                    <div class="hint">El MP3 se guarda en tu carpeta de música</div>
+                </div>
+                <button class="icon-ghost" @onclick="() => ViewModel.ToggleDownloadPanelCommand.Execute(null)">
+                    <svg viewBox="0 0 13 13"><path d="M0,0 L13,13 M13,0 L0,13" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+                </button>
+            </div>
+            <div class="modal-input-row">
+                <input type="text" placeholder="https://www.youtube.com/watch?v=…"
+                       value="@ViewModel.DownloadUrl" @oninput="OnDownloadUrlChanged"
+                       @onkeydown="OnDownloadUrlKeyDown" />
+                <button class="pill" disabled="@(!ViewModel.DownloadCommand.CanExecute(null))"
+                        @onclick="() => ViewModel.DownloadCommand.Execute(null)">Descargar</button>
+            </div>
+            <div class="row-time modal-status">@ViewModel.DownloadStatus</div>
+            <div class="download-queue">
+                @foreach (var item in ViewModel.DownloadQueue)
+                {
+                    <div class="download-card">
+                        <div class="download-title">@item.Title</div>
+                        @if (item.IsInProgress)
+                        {
+                            <div class="download-progress-row">
+                                <span class="row-time">@item.StatusLabel</span>
+                                <div class="progress-track"><div class="progress-fill" style="width:@(item.Progress * 100)%"></div></div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="row-time">@item.StatusLabel</div>
+                        }
+                        @if (item.ErrorMessage is { } error)
+                        {
+                            <div class="download-error">@error</div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Inject]
+    public MainWindowViewModel ViewModel { get; set; } = default!;
+
+    protected override void OnInitialized()
+    {
+        ViewModel.PropertyChanged += OnAnyPropertyChanged;
+        ViewModel.Player.PropertyChanged += OnAnyPropertyChanged;
+        ViewModel.Tracks.CollectionChanged += OnAnyCollectionChanged;
+        ViewModel.DownloadQueue.CollectionChanged += OnAnyCollectionChanged;
+    }
+
+    private void OnAnyPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e) =>
+        InvokeAsync(StateHasChanged);
+
+    private void OnAnyCollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e) =>
+        InvokeAsync(StateHasChanged);
+
+    private void OnSeekInput(ChangeEventArgs e)
+    {
+        ViewModel.Player.IsScrubbing = true;
+    }
+
+    private void OnSeekCommit(ChangeEventArgs e)
+    {
+        if (double.TryParse(e.Value?.ToString(), out var fraction) && ViewModel.Player.SeekCommand.CanExecute(fraction))
+        {
+            ViewModel.Player.SeekCommand.Execute(fraction);
+        }
+
+        ViewModel.Player.IsScrubbing = false;
+    }
+
+    private void OnDownloadUrlChanged(ChangeEventArgs e) => ViewModel.DownloadUrl = e.Value?.ToString() ?? string.Empty;
+
+    private void OnDownloadUrlKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && ViewModel.DownloadCommand.CanExecute(null))
+        {
+            ViewModel.DownloadCommand.Execute(null);
+        }
+    }
+
+    private static string ToDataUri(byte[] bytes) => $"data:image/jpeg;base64,{Convert.ToBase64String(bytes)}";
+
+    public void Dispose()
+    {
+        ViewModel.PropertyChanged -= OnAnyPropertyChanged;
+        ViewModel.Player.PropertyChanged -= OnAnyPropertyChanged;
+        ViewModel.Tracks.CollectionChanged -= OnAnyCollectionChanged;
+        ViewModel.DownloadQueue.CollectionChanged -= OnAnyCollectionChanged;
+    }
+}

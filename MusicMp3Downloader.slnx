@@ -1,7 +1,7 @@
 <Solution>
   <Folder Name="/core/">
     <Project Path="core/MusicMp3Downloader.App.csproj" />
-    <Project Path="core/Core/MusicMp3Downloader.Core.csproj" />
+    <Project Path="src/core/MusicMp3Downloader.Core.csproj" />
   </Folder>
   <Folder Name="/test/">
     <Project Path="test/MusicMp3Downloader.App.Tests.csproj" />

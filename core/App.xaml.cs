@@ -18,9 +18,6 @@ public partial class App : Application
 
     protected override Window CreateWindow(IActivationState? activationState)
     {
-        // MainPage se resuelve aquí (no por constructor) para que InitializeComponent()
-        // ya haya fusionado Palette.xaml/AppStyles.xaml en Application.Current.Resources
-        // antes de que MainPage.xaml intente resolver sus StaticResource.
         var mainPage = _services.GetRequiredService<MainPage>();
 
         // Tamaño de "popup" (como Mega/Discord): la ventana no es una app de escritorio

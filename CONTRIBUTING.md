@@ -110,15 +110,17 @@ El detalle completo, incluido el workflow de despliegue, está en [docs/ci-guide
 - Sigue las convenciones por defecto de `dotnet format` (basadas en `.editorconfig` cuando exista).
 - `Nullable` está activado: no introduzcas advertencias de nulabilidad.
 - Un tipo por archivo; el nombre del archivo coincide con el del tipo.
-- El código se reparte en dos proyectos dentro de `core/`:
-  - `core/Core/MusicMp3Downloader.Core.csproj` — class library sin dependencias de MAUI:
+- El código se reparte en dos proyectos:
+  - `src/core/MusicMp3Downloader.Core.csproj` — class library sin dependencias de MAUI:
     `Models/`, `Services/`, `Data/`, `ViewModels/` (deriva de `ViewModelBase`; usa los
     generadores de `CommunityToolkit.Mvvm`: `[ObservableProperty]`, `[RelayCommand]`).
     `Services/` sigue el patrón interfaz `IFoo` + implementación `Foo`.
-  - `core/` (proyecto MAUI) — `Views/` (`.xaml` + code-behind), `Styles/`, `Controls/`,
-    `Converters/`, `MauiProgram.cs` (DI, `IServiceCollection`) y `Platforms/`.
-- Usa enlaces compilados en XAML (`x:DataType`) y `StyleClass` para reutilizar estilos
-  (ver `Styles/AppStyles.xaml`).
+  - `core/` (proyecto MAUI) — `Components/` (la UI real: Razor + CSS isolation,
+    montados en un `BlazorWebView`), `wwwroot/` (página host del WebView), `Views/`
+    (el contenedor XAML del `BlazorWebView` y el ícono de bandeja), `MauiProgram.cs`
+    (DI, `IServiceCollection`) y `Platforms/`.
+- La UI se escribe en Razor (`.razor` + `.razor.css` con CSS isolation), no en XAML — la
+  única página XAML es el contenedor que aloja el `BlazorWebView`.
 
 ## Mensajes de commit
 

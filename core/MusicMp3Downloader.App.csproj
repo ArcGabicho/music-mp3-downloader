@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
     <!-- El TFM de Windows solo se agrega si el host que compila es Windows: el XAML
@@ -78,14 +78,6 @@
           SkipUnchangedFiles="true" />
   </Target>
 
-  <!-- Core/ es un proyecto aparte (MusicMp3Downloader.Core.csproj); excluirlo del globbing implícito. -->
-  <ItemGroup>
-    <Compile Remove="Core\**\*.cs" />
-    <None Remove="Core\**" />
-    <MauiXaml Remove="Core\**" />
-    <EmbeddedResource Remove="Core\**" />
-  </ItemGroup>
-
   <ItemGroup>
     <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#0C0C0F" />
     <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#0C0C0F" BaseSize="128,128" />
@@ -94,6 +86,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="$(MauiVersion)" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="Plugin.Maui.Audio" Version="4.0.0" />
@@ -119,7 +112,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="Core\MusicMp3Downloader.Core.csproj" />
+    <ProjectReference Include="..\src\core\MusicMp3Downloader.Core.csproj" />
   </ItemGroup>
 
 </Project>

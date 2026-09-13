@@ -93,25 +93,24 @@ resuelve con `FileSystem.AppDataDirectory` (MAUI Essentials), portable entre pla
 music-mp3-downloader/
 ├── MusicMp3Downloader.slnx              # Solución (formato XML .slnx)
 ├── core/                                # Proyecto MAUI (cabecera de la app)
-│   ├── MusicMp3Downloader.App.csproj    # multi-target: net10.0-windows…, net10.0-maccatalyst
-│   ├── MauiProgram.cs                   # Arranque de MAUI + contenedor de DI
-│   ├── App.xaml / App.xaml.cs           # Recursos globales + CreateWindow
+│   ├── MusicMp3Downloader.App.csproj    # SDK Microsoft.NET.Sdk.Razor; multi-target: net10.0-windows…, net10.0-maccatalyst
+│   ├── MauiProgram.cs                   # Arranque de MAUI + BlazorWebView + contenedor de DI
+│   ├── App.xaml / App.xaml.cs           # Recursos globales + CreateWindow (popup 440×620)
 │   ├── Platforms/                       # Cabeceras nativas (Windows/WinUI3, MacCatalyst)
-│   ├── Resources/                       # Icono de app y splash screen
-│   ├── Styles/                          # Palette.xaml (recursos) + AppStyles.xaml (StyleClass)
-│   ├── Views/                           # MainPage.xaml / .xaml.cs — UI de dos paneles + overlay de descarga
-│   ├── Controls/                        # WaveformScrubber (GraphicsView, barra con forma de onda)
-│   ├── Converters/                      # ByteArrayToImageSourceConverter, IsNotNullConverter, InvertedBoolConverter
+│   ├── Resources/                       # Icono de app, splash screen, ícono de bandeja
+│   ├── Components/                      # Player.razor + Player.razor.css — la UI real (HTML/CSS/C#)
+│   ├── wwwroot/                         # index.html, página host del BlazorWebView
+│   ├── Views/                           # MainPage.xaml (contenedor del BlazorWebView) y TrayIconView.xaml (ícono de bandeja, solo Windows)
 │   ├── Services/                        # Implementaciones ligadas a MAUI: PluginMauiAudioPlayer, MauiUiDispatcher
-│   ├── Core/                            # Class library independiente de MAUI
-│   │   ├── MusicMp3Downloader.Core.csproj
-│   │   ├── Models/                      # Track, DownloadItem, DownloadStatus
-│   │   ├── ViewModels/                  # MainWindowViewModel, PlayerViewModel, TrackViewModel, DownloadItemViewModel
-│   │   ├── Services/                    # ILibraryService, IAudioPlayer, IDownloadService, IExternalTools, IMusicLibrary, IAudioTagger, IUiDispatcher + impl. agnósticas de UI
-│   │   └── Data/                        # AppDbContext (EF Core) y entidades persistidas
 │   └── Tools/                           # fetch-tools.{sh,ps1} + binarios yt-dlp/ffmpeg (descargados, no versionados)
+├── src/core/                            # Class library independiente de MAUI
+│   ├── MusicMp3Downloader.Core.csproj
+│   ├── Models/                          # Track, DownloadItem, DownloadStatus
+│   ├── ViewModels/                      # MainWindowViewModel, PlayerViewModel, TrackViewModel, DownloadItemViewModel
+│   ├── Services/                        # ILibraryService, IAudioPlayer, IDownloadService, IWaveformService, IExternalTools, IMusicLibrary, IAudioTagger, IUiDispatcher + impl. agnósticas de UI
+│   └── Data/                            # AppDbContext (EF Core) y entidades persistidas
 ├── docs/                                # Documentación
-├── test/                                # xUnit (referencia solo Core.csproj, sin dependencia de MAUI)
+├── test/                                # xUnit (referencia solo Core.csproj, sin dependencia de MAUI ni Blazor)
 ├── packaging/                           # windows/installer.iss (Inno Setup)
 ├── .github/workflows/                   # ci.yml (integración) y deploy.yml (publicación)
 └── README.md
@@ -119,7 +118,7 @@ music-mp3-downloader/
 
 ## Convenciones
 
-- **Dos proyectos:** `core/Core/MusicMp3Downloader.Core.csproj` (class library `net10.0`
+- **Dos proyectos:** `src/core/MusicMp3Downloader.Core.csproj` (class library `net10.0`
   normal, sin ninguna referencia a `Microsoft.Maui.*`) contiene toda la lógica
   (ViewModels, Services, Data, Models) para que `test/` pueda compilarla y probarla sin
   el workload de MAUI. `core/MusicMp3Downloader.App.csproj` (multi-target MAUI) contiene
