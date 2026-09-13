@@ -30,6 +30,17 @@
     <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
   </PropertyGroup>
 
+  <!-- Core vive en Core/ dentro de este mismo directorio de proyecto: el globbing por
+       defecto del SDK (Compile/Content/None/EmbeddedResource) es recursivo y, sin esto,
+       incluiría también los .cs de Core (y hasta su obj/ generado) como si fueran de
+       App, duplicando tipos y atributos de ensamblado. -->
+  <ItemGroup>
+    <Compile Remove="Core\**" />
+    <Content Remove="Core\**" />
+    <EmbeddedResource Remove="Core\**" />
+    <None Remove="Core\**" />
+  </ItemGroup>
+
   <!-- ============ Herramientas externas empaquetadas (yt-dlp + ffmpeg) ============ -->
   <PropertyGroup>
     <BundleExternalTools Condition="'$(BundleExternalTools)' == ''">true</BundleExternalTools>
@@ -79,7 +90,7 @@
   </Target>
 
   <ItemGroup>
-    <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#0C0C0F" />
+    <MauiIcon Include="Resources\AppIcon\favicon.svg" Color="#0C0C0F" />
     <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#0C0C0F" BaseSize="128,128" />
     <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
@@ -123,7 +134,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\core\MusicMp3Downloader.Core.csproj" />
+    <ProjectReference Include="Core\MusicMp3Downloader.Core.csproj" />
   </ItemGroup>
 
 </Project>

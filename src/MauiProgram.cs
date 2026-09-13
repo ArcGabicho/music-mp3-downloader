@@ -26,8 +26,55 @@ public static class MauiProgram
     private const int DwmwaBorderColor = 34;
     private const int DwmwaColorNone = unchecked((int)0xFFFFFFFE);
 
+    private const uint SwpNoMove = 0x0002;
+    private const uint SwpNoSize = 0x0001;
+    private const uint SwpNoZOrder = 0x0004;
+    private const uint SwpNoActivate = 0x0010;
+    private const uint SwpFrameChanged = 0x0020;
+
+    private const int GwlStyle = -16;
+    private const long WsCaption = 0x00C00000L;
+    private const long WsThickFrame = 0x00040000L;
+    private const long WsBorder = 0x00800000L;
+    private const long WsDlgFrame = 0x00400000L;
+    private const long WsSysMenu = 0x00080000L;
+
     [System.Runtime.InteropServices.DllImport("dwmapi.dll")]
     private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int value, int size);
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags);
+
+    [System.Runtime.InteropServices.DllImport("user32.dll", EntryPoint = "GetWindowLongPtr")]
+    private static extern IntPtr GetWindowLongPtr(IntPtr hWnd, int nIndex);
+
+    [System.Runtime.InteropServices.DllImport("user32.dll", EntryPoint = "SetWindowLongPtr")]
+    private static extern IntPtr SetWindowLongPtr(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
+
+    // Tres capas contra el marco nativo, porque ninguna sola alcanza en una app sin
+    // identidad de paquete (WindowsPackageType=None, sin MSIX):
+    // 1) SetBorderAndTitleBar(false, false) (llamado por el caller) pide el modo sin
+    //    marco a WinUI, pero en apps sin empaquetar no siempre limpia los bits de estilo
+    //    nativos de la ventana, dejando el marco clásico (grueso, con relieve).
+    // 2) Por eso se limpian también a mano los bits WS_CAPTION/WS_THICKFRAME/WS_BORDER/
+    //    WS_DLGFRAME/WS_SYSMENU de GWL_STYLE.
+    // 3) DWMWA_BORDER_COLOR = DWMWA_COLOR_NONE quita el borde de acento que DWM sigue
+    //    dibujando en Windows 11 encima de todo lo anterior.
+    // Se reaplican las tres en cada Activated (no solo al crear la ventana) porque
+    // ocultar/mostrar el popup puede hacer que Windows redibuje el marco por defecto;
+    // SWP_FRAMECHANGED fuerza el redibujado inmediato en vez de esperar a otro evento.
+    private static void RemoveWindowChrome(IntPtr handle)
+    {
+        var style = GetWindowLongPtr(handle, GwlStyle).ToInt64();
+        style &= ~(WsCaption | WsThickFrame | WsBorder | WsDlgFrame | WsSysMenu);
+        SetWindowLongPtr(handle, GwlStyle, new IntPtr(style));
+
+        var borderColorNone = DwmwaColorNone;
+        DwmSetWindowAttribute(handle, DwmwaBorderColor, ref borderColorNone, sizeof(int));
+
+        SetWindowPos(handle, IntPtr.Zero, 0, 0, 0, 0,
+            SwpNoMove | SwpNoSize | SwpNoZOrder | SwpNoActivate | SwpFrameChanged);
+    }
 #endif
 
     public static MauiApp CreateMauiApp()
@@ -74,11 +121,7 @@ public static class MauiProgram
                     presenter.IsMinimizable = false;
                 }
 
-                // SetBorderAndTitleBar(false, false) quita el marco de WinUI, pero en
-                // Windows 11 el propio DWM sigue dibujando su borde de sistema (blanco/
-                // acento) alrededor de la ventana; hay que desactivarlo aparte.
-                var borderColorNone = DwmwaColorNone;
-                DwmSetWindowAttribute(handle, DwmwaBorderColor, ref borderColorNone, sizeof(int));
+                RemoveWindowChrome(handle);
 
                 // La app es únicamente de bandeja: arranca oculta, solo aparece al hacer
                 // clic en el ícono (igual que Mega/Discord). Ocultarla ya aquí no sirve:
@@ -91,6 +134,11 @@ public static class MauiProgram
                 }
 
                 window.Activated += HideOnFirstActivate;
+
+                // Reaplica en cada activación posterior: ocultar/mostrar la ventana (al
+                // hacer clic en el ícono de bandeja) puede hacer que Windows vuelva a
+                // dibujar el marco por defecto.
+                window.Activated += (_, _) => RemoveWindowChrome(handle);
             }));
         });
 #endif

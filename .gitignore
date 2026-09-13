@@ -62,8 +62,8 @@ Thumbs.db
 *.swp
 *.swo
 
-# Binarios externos empaquetados (se descargan durante el build; ver core/Tools/README.md)
-core/Tools/*/
+# Binarios externos empaquetados (se descargan durante el build; ver src/Tools/README.md)
+src/Tools/*/
 
 # Environment
 .env
