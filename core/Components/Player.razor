@@ -11,19 +11,19 @@
             }
             else
             {
-                <div class="avatar-dot"></div>
+                <span class="avatar-dot"></span>
             }
         </div>
         <div class="header-text">
-            <div class="title">@ViewModel.Player.NowPlayingTitle</div>
+            <p class="title">@ViewModel.Player.NowPlayingTitle</p>
             @if (ViewModel.Player.NowPlayingSubtitle is { } subtitle)
             {
-                <div class="subtitle">@subtitle</div>
+                <p class="subtitle">@subtitle</p>
             }
         </div>
         @if (ViewModel.Player.NowPlayingSubtitle is not null)
         {
-            <div class="badge"><span class="badge-dot"></span>Descargado</div>
+            <span class="chip"><span class="chip-dot"></span>Descargado</span>
         }
         <button class="icon-ghost" title="Descargar de YouTube" @onclick="() => ViewModel.ToggleDownloadPanelCommand.Execute(null)">
             <svg viewBox="0 0 20 20"><path d="M10 1v18M1 10h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
@@ -31,78 +31,76 @@
     </div>
 
     <!-- ============ FORMA DE ONDA ============ -->
-    <div class="waveform-section">
-        <div class="waveform">
-            @foreach (var peak in ViewModel.Player.WaveformPeaks)
-            {
-                <span class="bar" style="height:@(Math.Max(0.12, peak) * 100)%"></span>
-            }
-        </div>
-        <div class="waveform-times">
-            <span>@ViewModel.Player.PositionText</span>
-            <span>@ViewModel.Player.DurationText</span>
-        </div>
+    <div class="waveform">
+        @{
+            var playedBars = (int)(ViewModel.Player.WaveformPeaks.Length * ViewModel.Player.Progress);
+        }
+        @for (var i = 0; i < ViewModel.Player.WaveformPeaks.Length; i++)
+        {
+            <span class="bar @(i < playedBars ? "played" : "")" style="height:@(Math.Round(14 + Math.Max(0f, ViewModel.Player.WaveformPeaks[i]) * 78))%"></span>
+        }
+    </div>
+    <div class="waveform-times">
+        <span>@ViewModel.Player.PositionText</span>
+        <span>@ViewModel.Player.DurationText</span>
     </div>
 
-    <div class="hairline"></div>
-
     <!-- ============ LISTA DE PISTAS ============ -->
-    <div class="track-list">
+    <ul class="track-list">
         @if (ViewModel.IsLoading)
         {
             <div class="spinner"></div>
         }
         else if (ViewModel.Tracks.Count == 0)
         {
-            <div class="empty">
+            <li class="empty">
                 <div class="empty-title">Tu biblioteca está vacía</div>
                 <div class="empty-hint">Descarga tu primera canción con el botón + de arriba</div>
-            </div>
+            </li>
         }
         else
         {
             @foreach (var track in ViewModel.Tracks)
             {
-                <div class="track-row" @onclick="() => ViewModel.PlayTrackCommand.Execute(track)">
-                    <span class="track-index @(track.IsPlaying ? "playing" : "")">@track.IndexLabel</span>
-                    <span class="track-title @(track.IsPlaying ? "playing" : "")">@track.Title</span>
+                <li class="track-row @(track.IsPlaying ? "playing" : "")" @onclick="() => ViewModel.PlayTrackCommand.Execute(track)">
+                    <span class="track-index">@track.IndexLabel</span>
+                    <span class="track-title">@track.Title</span>
                     <span class="track-time">@track.DurationText</span>
-                </div>
+                </li>
             }
         }
-    </div>
+    </ul>
 
     <!-- ============ BARRA DE REPRODUCCIÓN ============ -->
     <div class="transport-bar">
-        <button class="transport" @onclick="() => ViewModel.Player.PreviousCommand.Execute(null)">
-            <svg viewBox="0 0 14 14"><path d="M0,0 L2.5,0 L2.5,14 L0,14 Z M13,0 L3,7 L13,14 Z" fill="currentColor" /></svg>
+        <button class="icon-btn" @onclick="() => ViewModel.Player.PreviousCommand.Execute(null)">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 20 9 12l10-8v16ZM7 4v16H5V4h2Z" /></svg>
         </button>
-        <button class="transport-main" @onclick="() => ViewModel.Player.PlayPauseCommand.Execute(null)">
+        <button class="play-btn" @onclick="() => ViewModel.Player.PlayPauseCommand.Execute(null)">
             @if (ViewModel.Player.IsPlaying)
             {
-                <svg viewBox="0 0 14 14"><rect x="1" y="0" width="4" height="14" fill="#0C0C0F" /><rect x="9" y="0" width="4" height="14" fill="#0C0C0F" /></svg>
+                <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1" /><rect x="14" y="5" width="4" height="14" rx="1" /></svg>
             }
             else
             {
-                <svg viewBox="0 0 14 14"><path d="M0,0 L13,7 L0,14 Z" fill="#0C0C0F" /></svg>
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7L8 5Z" /></svg>
             }
         </button>
-        <button class="transport" @onclick="() => ViewModel.Player.NextCommand.Execute(null)">
-            <svg viewBox="0 0 14 14"><path d="M11.5,0 L14,0 L14,14 L11.5,14 Z M1,0 L11,7 L1,14 Z" fill="currentColor" /></svg>
+        <button class="icon-btn" @onclick="() => ViewModel.Player.NextCommand.Execute(null)">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="m5 4 10 8L5 20V4Zm12 0h2v16h-2V4Z" /></svg>
         </button>
-        <span class="row-time">@ViewModel.Player.PositionText</span>
         <input class="seek" type="range" min="0" max="1" step="0.001"
                value="@ViewModel.Player.Progress"
+               style="background:linear-gradient(to right, rgba(255,255,255,.7) @(ViewModel.Player.Progress * 100)%, rgba(255,255,255,.1) @(ViewModel.Player.Progress * 100)%)"
                @oninput="OnSeekInput" @onchange="OnSeekCommit" />
-        <span class="row-time">@ViewModel.Player.DurationText</span>
-        <button class="transport" @onclick="() => ViewModel.Player.ToggleMuteCommand.Execute(null)">
+        <button class="icon-btn" @onclick="() => ViewModel.Player.ToggleMuteCommand.Execute(null)">
             @if (ViewModel.Player.IsMuted)
             {
-                <svg viewBox="0 0 20 16"><path d="M0,5 L4,5 L9,1 L9,15 L4,11 L0,11 Z" fill="currentColor" /><path d="M12,5 L18,11 M18,5 L12,11" stroke="#FF2D46" stroke-width="2" stroke-linecap="round" /></svg>
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3Z" /><path d="M15 9l6 6M21 9l-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" /></svg>
             }
             else
             {
-                <svg viewBox="0 0 20 16"><path d="M0,5 L4,5 L9,1 L9,15 L4,11 L0,11 Z" fill="currentColor" /></svg>
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3Zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.06A4.5 4.5 0 0 0 16.5 12Z" /></svg>
             }
         </button>
     </div>
