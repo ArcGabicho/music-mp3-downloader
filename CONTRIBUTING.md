@@ -10,8 +10,8 @@ el flujo de trabajo, los estándares de código y qué se espera de una Pull Req
 - Git
 - Solo se compila/ejecuta en **Windows** o **macOS**; MAUI no soporta escritorio Linux.
 
-`yt-dlp` y `FFmpeg` **no** hace falta instalarlos: el build los descarga como binarios
-autónomos en `core/Tools/<rid>/` (ver [`core/Tools/README.md`](core/Tools/README.md)).
+`yt-dlp`, `FFmpeg` y `Deno` **no** hace falta instalarlos: el build los descarga como binarios
+autónomos en `src/Tools/<rid>/` (ver [`src/Tools/README.md`](src/Tools/README.md)).
 La primera compilación necesita conexión; para compilar sin red usa
 `dotnet build -p:BundleExternalTools=false`.
 

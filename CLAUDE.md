@@ -82,15 +82,18 @@ Dos proyectos, separados a propósito para que `test/` no necesite el workload d
   false)` + `DwmSetWindowAttribute(..., DWMWA_BORDER_COLOR, DWMWA_COLOR_NONE)` para quitar
   también el borde de sistema que dibuja DWM en Windows 11), tamaño fijo 440×620.
 
-## Herramientas externas (yt-dlp + FFmpeg)
+## Herramientas externas (yt-dlp + FFmpeg + Deno)
 
-**Vienen empaquetadas; el usuario no instala nada.** `core/Tools/fetch-tools.{sh,ps1}`
-descargan los binarios autónomos en `core/Tools/<rid>/` durante el build (target
+**Vienen empaquetadas; el usuario no instala nada.** `src/Tools/fetch-tools.{sh,ps1}`
+descargan los binarios autónomos en `src/Tools/<rid>/` durante el build (target
 `FetchExternalTools`, solo si faltan) y se copian junto al ejecutable en `tools/`.
 En ejecución `IExternalTools` los resuelve desde ahí, con reserva al `PATH`.
 
 - Compilar sin red: `dotnet build -p:BundleExternalTools=false`.
-- `core/Tools/<rid>/` está en `.gitignore`; solo se versionan los scripts.
+- `src/Tools/<rid>/` está en `.gitignore`; solo se versionan los scripts.
+- Deno es el intérprete de JavaScript que yt-dlp necesita para resolver los desafíos de
+  YouTube; `DownloadService` se lo pasa con `--js-runtimes deno:<ruta>`. Sin él, YouTube
+  oculta formatos o bloquea videos enteros.
 - RIDs soportados: `win-x64`, `win-arm64`, `osx-x64`, `osx-arm64` (Linux se quitó de
   ambos scripts al migrar a MAUI).
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Descarga binarios autónomos de yt-dlp + ffmpeg para un RID concreto en core/tools/<rid>/.
+# Descarga binarios autónomos de yt-dlp + ffmpeg + deno para un RID concreto en src/Tools/<rid>/.
 # Lo invoca el build (target FetchExternalTools) y también puede ejecutarse a mano:
-#     bash core/tools/fetch-tools.sh win-x64
+#     bash src/Tools/fetch-tools.sh win-x64
 #
 # No instala nada en el sistema: todo queda dentro de la carpeta del proyecto.
 set -euo pipefail
@@ -16,9 +16,11 @@ is_win() { [[ "$RID" == win-* ]]; }
 if is_win; then
   YTDLP_OUT="$DEST/yt-dlp.exe"
   FFMPEG_OUT="$DEST/ffmpeg.exe"
+  DENO_OUT="$DEST/deno.exe"
 else
   YTDLP_OUT="$DEST/yt-dlp"
   FFMPEG_OUT="$DEST/ffmpeg"
+  DENO_OUT="$DEST/deno"
 fi
 
 fetch() { curl --fail --location --retry 3 --silent --show-error "$1" --output "$2"; }
@@ -63,6 +65,24 @@ if [[ ! -f "$FFMPEG_OUT" ]]; then
       extract_to "$tmp/ff.zip" ffmpeg "$FFMPEG_OUT" ;;
   esac
   chmod +x "$FFMPEG_OUT" 2>/dev/null || true
+fi
+
+# ---------------- deno ----------------
+# yt-dlp necesita un intérprete de JavaScript para resolver los desafíos de YouTube;
+# sin él, cada vez más formatos (o videos enteros) dejan de estar disponibles.
+if [[ ! -f "$DENO_OUT" ]]; then
+  case "$RID" in
+    win-x64)   target="x86_64-pc-windows-msvc" ;;
+    win-arm64) target="aarch64-pc-windows-msvc" ;;
+    osx-x64)   target="x86_64-apple-darwin" ;;
+    osx-arm64) target="aarch64-apple-darwin" ;;
+  esac
+  echo "· deno ($target)"
+  deno_tmp="$(mktemp -d)"
+  fetch "https://github.com/denoland/deno/releases/latest/download/deno-$target.zip" "$deno_tmp/deno.zip"
+  extract_to "$deno_tmp/deno.zip" "$(basename "$DENO_OUT")" "$DENO_OUT"
+  rm -rf "$deno_tmp"
+  chmod +x "$DENO_OUT" 2>/dev/null || true
 fi
 
 echo "Herramientas listas en $DEST"

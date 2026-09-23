@@ -41,7 +41,7 @@
     <None Remove="Core\**" />
   </ItemGroup>
 
-  <!-- ============ Herramientas externas empaquetadas (yt-dlp + ffmpeg) ============ -->
+  <!-- ============ Herramientas externas empaquetadas (yt-dlp + ffmpeg + deno) ============ -->
   <PropertyGroup>
     <BundleExternalTools Condition="'$(BundleExternalTools)' == ''">true</BundleExternalTools>
     <ExternalToolsRid Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">win-x64</ExternalToolsRid>
@@ -53,9 +53,9 @@
   <Target Name="FetchExternalTools"
           BeforeTargets="Build;Publish"
           Condition="'$(BundleExternalTools)' == 'true' and '$(ExternalToolsRid)' != ''">
-    <!-- Cada Exec comprueba yt-dlp Y ffmpeg por separado: si uno de los dos no se
+    <!-- Cada Exec comprueba yt-dlp, ffmpeg y deno por separado: si uno de ellos no se
          descargó (p. ej. por un fallo de red puntual), reintenta en el próximo build
-         en vez de darlo por "ya resuelto" solo porque el otro binario sí existe. -->
+         en vez de darlo por "ya resuelto" solo porque los otros binarios sí existen. -->
     <Exec Condition="!$([MSBuild]::IsOSPlatform('Windows')) and !Exists('$(ExternalToolsDir)/yt-dlp')"
           Command="bash &quot;$(ExternalToolsSourceRoot)/fetch-tools.sh&quot; $(ExternalToolsRid)"
           ContinueOnError="WarnAndContinue" />
@@ -66,6 +66,12 @@
           Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(ExternalToolsSourceRoot)\fetch-tools.ps1&quot; -Rid $(ExternalToolsRid)"
           ContinueOnError="WarnAndContinue" />
     <Exec Condition="$([MSBuild]::IsOSPlatform('Windows')) and !Exists('$(ExternalToolsDir)/ffmpeg.exe')"
+          Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(ExternalToolsSourceRoot)\fetch-tools.ps1&quot; -Rid $(ExternalToolsRid)"
+          ContinueOnError="WarnAndContinue" />
+    <Exec Condition="!$([MSBuild]::IsOSPlatform('Windows')) and !Exists('$(ExternalToolsDir)/deno')"
+          Command="bash &quot;$(ExternalToolsSourceRoot)/fetch-tools.sh&quot; $(ExternalToolsRid)"
+          ContinueOnError="WarnAndContinue" />
+    <Exec Condition="$([MSBuild]::IsOSPlatform('Windows')) and !Exists('$(ExternalToolsDir)/deno.exe')"
           Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(ExternalToolsSourceRoot)\fetch-tools.ps1&quot; -Rid $(ExternalToolsRid)"
           ContinueOnError="WarnAndContinue" />
   </Target>

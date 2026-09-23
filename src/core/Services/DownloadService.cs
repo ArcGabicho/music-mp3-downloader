@@ -4,7 +4,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Runtime.CompilerServices;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -17,6 +17,9 @@ namespace MusicMp3Downloader.App.Services;
 
 public sealed partial class DownloadService : IDownloadService
 {
+    // Intentos totales ante fallos transitorios (red, YouTube cambiando su API, etc.).
+    private const int MaxAttempts = 3;
+
     private readonly IMusicLibrary _musicLibrary;
     private readonly IExternalTools _tools;
     private readonly IDbContextFactory<AppDbContext> _dbFactory;
@@ -37,7 +40,7 @@ public sealed partial class DownloadService : IDownloadService
         CancellationToken cancellationToken = default)
     {
         var outputDirectory = _musicLibrary.GetMusicDirectory();
-        var outputTemplate = Path.Combine(outputDirectory, "%(title)s.%(ext)s");
+        Directory.CreateDirectory(outputDirectory);
 
         var item = new DownloadItem
         {
@@ -45,49 +48,55 @@ public sealed partial class DownloadService : IDownloadService
             Status = DownloadStatus.Downloading,
         };
 
-        var arguments = new List<string>
-        {
-            "--no-playlist",
-            "--extract-audio",
-            "--audio-format", "mp3",
-            "--audio-quality", "0",
-            "--embed-metadata",
-            "--no-quiet",
-            "--newline",
-            "--progress",
-            "--print", "after_move:filepath",
-            "--output", outputTemplate,
-            url,
-        };
-
-        // Usa el FFmpeg empaquetado si está disponible, en vez del del sistema.
-        if (_tools.FfmpegDirectory is { } ffmpegDirectory)
-        {
-            arguments.Insert(0, ffmpegDirectory);
-            arguments.Insert(0, "--ffmpeg-location");
-        }
-
+        var arguments = BuildArguments(url, outputDirectory);
+        var updated = false;
         string? filePath = null;
-        await foreach (var line in RunYtDlpAsync(_tools.YtDlpPath, arguments, cancellationToken))
+
+        for (var attempt = 1; ; attempt++)
         {
-            var match = ProgressRegex().Match(line);
-            if (match.Success &&
-                double.TryParse(match.Groups[1].Value, CultureInfo.InvariantCulture, out var percent))
+            var startedAt = DateTime.UtcNow;
+            var result = await RunYtDlpAsync(
+                _tools.YtDlpPath,
+                arguments,
+                line => filePath = HandleOutputLine(line, progress) ?? filePath,
+                cancellationToken);
+
+            if (result.ExitCode == 0)
             {
-                progress?.Report(Math.Clamp(percent / 100d, 0d, 1d));
-                continue;
+                // Reserva: si la ruta impresa no coincide con un archivo real, se busca
+                // el MP3 recién escrito en la carpeta de destino.
+                if (filePath is null || !File.Exists(filePath))
+                {
+                    filePath = FindNewestMp3(outputDirectory, startedAt);
+                }
+
+                if (filePath is not null)
+                {
+                    break;
+                }
             }
 
-            var trimmed = line.Trim();
-            if (Path.IsPathRooted(trimmed) && trimmed.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase))
+            if (YtDlpErrors.IsPermanent(result.Error) || attempt >= MaxAttempts)
             {
-                filePath = trimmed;
+                throw new InvalidOperationException(
+                    result.ExitCode == 0
+                        ? "yt-dlp terminó sin producir ningún archivo MP3."
+                        : YtDlpErrors.Describe(result.Error));
             }
-        }
 
-        if (filePath is null || !File.Exists(filePath))
-        {
-            throw new InvalidOperationException("yt-dlp no produjo ningún archivo MP3.");
+            // YouTube rompe las versiones viejas de yt-dlp a menudo: tras el primer fallo
+            // se actualiza el binario empaquetado antes de reintentar.
+            if (!updated && _tools.YtDlpIsBundled)
+            {
+                updated = true;
+                await TryUpdateYtDlpAsync(cancellationToken);
+            }
+            else
+            {
+                await Task.Delay(TimeSpan.FromSeconds(2 * attempt), cancellationToken);
+            }
+
+            progress?.Report(0d);
         }
 
         progress?.Report(1d);
@@ -101,6 +110,113 @@ public sealed partial class DownloadService : IDownloadService
         await PersistAsync(item, cancellationToken);
 
         return item;
+    }
+
+    private List<string> BuildArguments(string url, string outputDirectory)
+    {
+        var arguments = new List<string>
+        {
+            // Ignora cualquier yt-dlp.conf del usuario que pueda cambiar el comportamiento.
+            "--ignore-config",
+            // Sin esto, en Windows yt-dlp escribe en la página de códigos del sistema
+            // (cp1252) y omite los caracteres que no caben: la ruta impresa no coincide
+            // con el archivo real cuando el título tiene japonés, emojis, etc.
+            "--encoding", "utf-8",
+            "--no-playlist",
+            "--extract-audio",
+            "--audio-format", "mp3",
+            "--audio-quality", "0",
+            "--embed-metadata",
+            "--retries", "10",
+            "--fragment-retries", "10",
+            "--extractor-retries", "3",
+            "--socket-timeout", "30",
+            "--trim-filenames", "150",
+            "--no-quiet",
+            "--newline",
+            "--progress",
+            "--print", "after_move:filepath",
+            "--output", Path.Combine(outputDirectory, "%(title)s.%(ext)s"),
+        };
+
+        if (OperatingSystem.IsWindows())
+        {
+            arguments.Add("--windows-filenames");
+        }
+
+        // Usa el FFmpeg empaquetado si está disponible, en vez del del sistema.
+        if (_tools.FfmpegDirectory is { } ffmpegDirectory)
+        {
+            arguments.Add("--ffmpeg-location");
+            arguments.Add(ffmpegDirectory);
+        }
+
+        // Sin intérprete de JavaScript, YouTube oculta formatos o bloquea el video entero.
+        if (_tools.DenoPath is { } denoPath)
+        {
+            arguments.Add("--js-runtimes");
+            arguments.Add($"deno:{denoPath}");
+        }
+
+        // "--" evita que una URL que empiece por "-" se interprete como opción.
+        arguments.Add("--");
+        arguments.Add(url);
+        return arguments;
+    }
+
+    private static string? HandleOutputLine(string line, IProgress<double>? progress)
+    {
+        var match = ProgressRegex().Match(line);
+        if (match.Success &&
+            double.TryParse(match.Groups[1].Value, CultureInfo.InvariantCulture, out var percent))
+        {
+            progress?.Report(Math.Clamp(percent / 100d, 0d, 1d));
+            return null;
+        }
+
+        var trimmed = line.Trim();
+        return Path.IsPathRooted(trimmed) && trimmed.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase)
+            ? trimmed
+            : null;
+    }
+
+    private static string? FindNewestMp3(string directory, DateTime sinceUtc)
+    {
+        try
+        {
+            return new DirectoryInfo(directory)
+                .EnumerateFiles("*.mp3")
+                .Where(f => f.LastWriteTimeUtc >= sinceUtc.AddSeconds(-5))
+                .OrderByDescending(f => f.LastWriteTimeUtc)
+                .Select(f => f.FullName)
+                .FirstOrDefault();
+        }
+        catch (IOException)
+        {
+            return null;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return null;
+        }
+    }
+
+    private async Task TryUpdateYtDlpAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            timeout.CancelAfter(TimeSpan.FromMinutes(2));
+            await RunYtDlpAsync(_tools.YtDlpPath, ["--update"], _ => { }, timeout.Token);
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            // La actualización tardó demasiado: se reintenta con la versión actual.
+        }
+        catch (InvalidOperationException)
+        {
+            // Sin permisos de escritura o sin red: se reintenta con la versión actual.
+        }
     }
 
     private async Task PersistAsync(DownloadItem item, CancellationToken cancellationToken)
@@ -140,18 +256,25 @@ public sealed partial class DownloadService : IDownloadService
         }
     }
 
-    private static async IAsyncEnumerable<string> RunYtDlpAsync(
+    private static async Task<YtDlpResult> RunYtDlpAsync(
         string ytDlpPath,
         IReadOnlyList<string> arguments,
-        [EnumeratorCancellation] CancellationToken cancellationToken)
+        Action<string> onOutputLine,
+        CancellationToken cancellationToken)
     {
         var startInfo = new ProcessStartInfo(ytDlpPath)
         {
             RedirectStandardOutput = true,
             RedirectStandardError = true,
+            StandardOutputEncoding = Encoding.UTF8,
+            StandardErrorEncoding = Encoding.UTF8,
             UseShellExecute = false,
             CreateNoWindow = true,
         };
+
+        // yt-dlp es Python: fuerza UTF-8 también en sus propios mensajes de error.
+        startInfo.Environment["PYTHONIOENCODING"] = "utf-8";
+        startInfo.Environment["PYTHONUTF8"] = "1";
 
         foreach (var argument in arguments)
         {
@@ -168,7 +291,7 @@ public sealed partial class DownloadService : IDownloadService
         {
             throw new InvalidOperationException(
                 "No se encontró yt-dlp. El binario se descarga durante la compilación; " +
-                "ejecuta 'dotnet build' o 'bash core/Tools/fetch-tools.sh <rid>'.", ex);
+                "ejecuta 'dotnet build' o 'src/Tools/fetch-tools.ps1 -Rid win-x64'.", ex);
         }
 
         var errorBuffer = new StringBuilder();
@@ -176,22 +299,41 @@ public sealed partial class DownloadService : IDownloadService
         {
             if (e.Data is not null)
             {
-                errorBuffer.AppendLine(e.Data);
+                lock (errorBuffer)
+                {
+                    errorBuffer.AppendLine(e.Data);
+                }
             }
         };
         process.BeginErrorReadLine();
 
-        while (await process.StandardOutput.ReadLineAsync(cancellationToken) is { } line)
+        try
         {
-            yield return line;
+            while (await process.StandardOutput.ReadLineAsync(cancellationToken) is { } line)
+            {
+                onOutputLine(line);
+            }
+
+            await process.WaitForExitAsync(cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            // Sin esto yt-dlp (y el ffmpeg que lanza) seguirían corriendo en segundo plano.
+            try
+            {
+                process.Kill(entireProcessTree: true);
+            }
+            catch (InvalidOperationException)
+            {
+                // Ya había terminado.
+            }
+
+            throw;
         }
 
-        await process.WaitForExitAsync(cancellationToken);
-
-        if (process.ExitCode != 0)
+        lock (errorBuffer)
         {
-            throw new InvalidOperationException(
-                $"yt-dlp terminó con código {process.ExitCode}.{Environment.NewLine}{errorBuffer}".Trim());
+            return new YtDlpResult(process.ExitCode, errorBuffer.ToString());
         }
     }
 

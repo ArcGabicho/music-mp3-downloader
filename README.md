@@ -21,7 +21,7 @@ iwr https://github.com/ArcGabicho/music-mp3-downloader/releases/latest/download/
 ```
 
 > [!WARNING]
-> Necesitas Windows 10/11 (incluye PowerShell y `iwr`) y conexión a internet. `yt-dlp` y `ffmpeg` vienen incluidos; no hay que instalar nada aparte.
+> Necesitas Windows 10/11 (incluye PowerShell y `iwr`) y conexión a internet. `yt-dlp`, `ffmpeg` y `deno` vienen incluidos; no hay que instalar nada aparte.
 > El comando descarga el instalador de la última release y lo ejecuta (instalación por usuario, sin permisos de administrador). Como el ejecutable no está firmado, SmartScreen puede avisar: **Más información → Ejecutar de todas formas**.
 
 ---

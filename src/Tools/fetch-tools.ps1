@@ -1,7 +1,7 @@
 <#
-    Descarga binarios autónomos de yt-dlp + ffmpeg para un RID en core/tools/<rid>/.
+    Descarga binarios autónomos de yt-dlp + ffmpeg + deno para un RID en src/Tools/<rid>/.
     Lo invoca el build (target FetchExternalTools) en Windows y también puede lanzarse a mano:
-        powershell -ExecutionPolicy Bypass -File core/tools/fetch-tools.ps1 -Rid win-x64
+        powershell -ExecutionPolicy Bypass -File src/Tools/fetch-tools.ps1 -Rid win-x64
     No instala nada en el sistema.
 #>
 param(
@@ -18,6 +18,7 @@ New-Item -ItemType Directory -Force -Path $dest | Out-Null
 $isWin = $Rid -like 'win-*'
 $ytDlpOut  = if ($isWin) { Join-Path $dest 'yt-dlp.exe' } else { Join-Path $dest 'yt-dlp' }
 $ffmpegOut = if ($isWin) { Join-Path $dest 'ffmpeg.exe' } else { Join-Path $dest 'ffmpeg' }
+$denoOut   = if ($isWin) { Join-Path $dest 'deno.exe' } else { Join-Path $dest 'deno' }
 
 function Expand-One([string]$Url, [string]$LeafName, [string]$OutFile) {
     $tmp = Join-Path ([IO.Path]::GetTempPath()) ("tool-" + [guid]::NewGuid())
@@ -59,6 +60,21 @@ if (-not (Test-Path $ffmpegOut)) {
         Write-Host "· ffmpeg (evermeet.cx)"
         Expand-One "https://evermeet.cx/ffmpeg/getrelease/ffmpeg/zip" 'ffmpeg' $ffmpegOut
     }
+}
+
+# ---------------- deno ----------------
+# yt-dlp necesita un intérprete de JavaScript para resolver los desafíos de YouTube;
+# sin él, cada vez más formatos (o videos enteros) dejan de estar disponibles.
+if (-not (Test-Path $denoOut)) {
+    $target = switch ($Rid) {
+        'win-x64'   { 'x86_64-pc-windows-msvc' }
+        'win-arm64' { 'aarch64-pc-windows-msvc' }
+        'osx-x64'   { 'x86_64-apple-darwin' }
+        'osx-arm64' { 'aarch64-apple-darwin' }
+        default     { throw "RID no soportado: $Rid" }
+    }
+    Write-Host "· deno ($target)"
+    Expand-One "https://github.com/denoland/deno/releases/latest/download/deno-$target.zip" (Split-Path $denoOut -Leaf) $denoOut
 }
 
 Write-Host "Herramientas listas en $dest"

@@ -30,6 +30,13 @@ public sealed class ExternalTools : IExternalTools
             FfmpegDirectory = toolsDir;
             MakeExecutable(bundledFfmpeg);
         }
+
+        var bundledDeno = Path.Combine(toolsDir, OperatingSystem.IsWindows() ? "deno.exe" : "deno");
+        if (File.Exists(bundledDeno))
+        {
+            DenoPath = bundledDeno;
+            MakeExecutable(bundledDeno);
+        }
     }
 
     public string YtDlpPath { get; }
@@ -37,6 +44,8 @@ public sealed class ExternalTools : IExternalTools
     public string? FfmpegDirectory { get; }
 
     public bool YtDlpIsBundled { get; }
+
+    public string? DenoPath { get; }
 
     private static void MakeExecutable(string path)
     {

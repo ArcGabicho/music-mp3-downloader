@@ -27,13 +27,14 @@ En desarrollo temprano, pero funcional de extremo a extremo:
 
 ### Herramientas externas empaquetadas
 
-**yt-dlp** y **FFmpeg** vienen **incluidos** en la app; el usuario no instala nada.
-Los scripts `core/Tools/fetch-tools.{sh,ps1}` descargan los binarios autónomos en
-`core/Tools/<rid>/` durante la compilación (target `FetchExternalTools` del `.csproj`,
+**yt-dlp**, **FFmpeg** y **Deno** vienen **incluidos** en la app; el usuario no instala nada.
+Los scripts `src/Tools/fetch-tools.{sh,ps1}` descargan los binarios autónomos en
+`src/Tools/<rid>/` durante la compilación (target `FetchExternalTools` del `.csproj`,
 solo si faltan) y se copian a `bin/…/tools/` y al publicado. En ejecución,
 `IExternalTools` los resuelve desde `<carpeta del ejecutable>/tools/`, y si no
 estuvieran recurre al `PATH`. `DownloadService` invoca ese yt-dlp y le pasa
-`--ffmpeg-location` apuntando al FFmpeg empaquetado.
+`--ffmpeg-location` apuntando al FFmpeg empaquetado y `--js-runtimes deno:<ruta>` para
+que resuelva los desafíos de JavaScript de YouTube con el Deno empaquetado.
 
 - Compilar sin red: `dotnet build -p:BundleExternalTools=false`.
 - Se usa `releases/latest` a propósito (yt-dlp necesita actualizarse a menudo).
