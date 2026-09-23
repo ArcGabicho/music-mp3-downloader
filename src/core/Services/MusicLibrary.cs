@@ -23,7 +23,7 @@ public sealed class MusicLibrary : IMusicLibrary
             return string.IsNullOrEmpty(known) ? Path.Combine(home, "Music") : known;
         }
 
-        // macOS y Mac Catalyst comparten la misma carpeta de música del usuario.
+        // Fuera de Windows (p. ej. al ejecutar los tests en Linux) se usa ~/Music.
         return Path.Combine(home, "Music");
     }
 }

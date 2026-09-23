@@ -1,13 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
-    <!-- El TFM de Windows solo se agrega si el host que compila es Windows: el XAML
-         nativo de Platforms/Windows/App.xaml pasa por XamlCompiler.exe (WindowsAppSDK),
-         un binario de Windows que no corre en macOS/Linux bajo ningún concepto — ni con
-         EnableWindowsTargeting, que solo habilita el *restore*, no la compilación. Mismo
-         patrón que usa la plantilla oficial de "dotnet new maui". -->
-    <TargetFrameworks>net10.0-maccatalyst</TargetFrameworks>
-    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
+    <!-- Solo Windows: la app es de bandeja (WinUI + H.NotifyIcon.Maui). Este TFM no
+         compila en hosts que no son Windows — el XAML nativo de Platforms/Windows/App.xaml
+         pasa por XamlCompiler.exe (WindowsAppSDK), un binario de Windows; EnableWindowsTargeting
+         solo habilita el *restore*, no la compilación. -->
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <OutputType>Exe</OutputType>
     <RootNamespace>MusicMp3Downloader.App</RootNamespace>
     <AssemblyName>MusicMp3Downloader.App</AssemblyName>
@@ -25,9 +23,8 @@
     <!-- Sin empaquetar: publicación como carpeta autónoma, sin MSIX. -->
     <WindowsPackageType>None</WindowsPackageType>
 
-    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
-    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
-    <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
   </PropertyGroup>
 
   <!-- Core vive en Core/ dentro de este mismo directorio de proyecto: el globbing por
@@ -44,8 +41,7 @@
   <!-- ============ Herramientas externas empaquetadas (yt-dlp + ffmpeg + deno) ============ -->
   <PropertyGroup>
     <BundleExternalTools Condition="'$(BundleExternalTools)' == ''">true</BundleExternalTools>
-    <ExternalToolsRid Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">win-x64</ExternalToolsRid>
-    <ExternalToolsRid Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">osx-x64</ExternalToolsRid>
+    <ExternalToolsRid>win-x64</ExternalToolsRid>
     <ExternalToolsSourceRoot>$(MSBuildProjectDirectory)/Tools</ExternalToolsSourceRoot>
     <ExternalToolsDir>$(ExternalToolsSourceRoot)/$(ExternalToolsRid)</ExternalToolsDir>
   </PropertyGroup>
@@ -120,23 +116,14 @@
     <PackageReference Include="Plugin.Maui.Audio" Version="4.0.0" />
   </ItemGroup>
 
-  <!-- Ícono de bandeja del sistema: solo Windows (Mac Catalyst no tiene "bandeja",
-       usa un paradigma distinto — ítem de la barra de menú — fuera de alcance). -->
-  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+  <!-- Ícono de bandeja del sistema. TrayIconView es una vista de MAUI (usa
+       H.NotifyIcon.Maui), no de WinUI, así que NO puede vivir bajo Platforms/Windows/: el
+       SDK de MAUI quita incondicionalmente todo .xaml bajo esa carpeta del item MauiXaml
+       (asume que es XAML nativo de WinUI para XamlCompiler.exe, como App.xaml) — si se la
+       deja ahí, XamlCompiler.exe intenta compilarla y falla en silencio (exit code 1, sin
+       mensaje). Por eso vive en Views/ junto al resto de páginas MAUI. -->
+  <ItemGroup>
     <PackageReference Include="H.NotifyIcon.Maui" Version="2.4.1" />
-  </ItemGroup>
-
-  <!-- TrayIconView es una vista de MAUI (usa H.NotifyIcon.Maui), no de WinUI, así que NO
-       puede vivir bajo Platforms/Windows/: el SDK de MAUI quita incondicionalmente todo
-       .xaml bajo esa carpeta del item MauiXaml (asume que es XAML nativo de WinUI para
-       XamlCompiler.exe, como App.xaml) — si se la deja ahí, XamlCompiler.exe intenta
-       compilarla y falla en silencio (exit code 1, sin mensaje). Por eso vive en Views/
-       junto al resto de páginas MAUI, y se excluye del build en Mac Catalyst aquí en vez
-       de por ubicación de carpeta, ya que depende de H.NotifyIcon (solo Windows). -->
-  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) != 'windows'">
-    <MauiXaml Remove="Views\TrayIconView.xaml" />
-    <Compile Remove="Views\TrayIconView.xaml.cs" />
-    <None Include="Views\TrayIconView.xaml" />
   </ItemGroup>
 
   <ItemGroup>

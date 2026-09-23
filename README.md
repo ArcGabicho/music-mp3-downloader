@@ -26,4 +26,4 @@ iwr https://github.com/ArcGabicho/music-mp3-downloader/releases/latest/download/
 
 ---
 
-Navega a https://music-mp3-downloader.astro.dev/ para acceder al sitio web del proyecto y descargar la aplicación.
+Navega a https://music-mp3-downloader-page.vercel.app/ para acceder al sitio web del proyecto y descargar la aplicación.

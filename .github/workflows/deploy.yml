@@ -45,12 +45,8 @@ jobs:
           echo "number=${ref#v}" >> "$GITHUB_OUTPUT"
 
       - name: Publish
-        # Sin --runtime explícito: en un proyecto multi-target, pasarlo como propiedad
-        # global de MSBuild hace que NuGet lo intente resolver también para el TFM de
-        # Mac Catalyst (combinación sin sentido maccatalyst+win-x64), buscando un
-        # paquete de runtime Mono para Windows que no existe (NU1102). El RID win-x64
-        # se resuelve solo, de forma implícita, para el TFM de Windows en un runner
-        # Windows.
+        # Sin --runtime explícito: el RID win-x64 se resuelve solo, de forma
+        # implícita, para el TFM de Windows en un runner Windows.
         run: >
           dotnet publish ${{ env.PROJECT }}
           --configuration ${{ env.CONFIGURATION }}

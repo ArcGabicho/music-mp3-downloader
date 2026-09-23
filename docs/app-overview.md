@@ -2,16 +2,16 @@
 
 ## Resumen
 
-**Music MP3 Downloader** es un **reproductor de música de escritorio** para **Windows y
-macOS** construido con **.NET 10** y **.NET MAUI**. Reproduce la biblioteca local del
+**Music MP3 Downloader** es un **reproductor de música de escritorio** para **Windows
+10 y 11** construido con **.NET 10**, **.NET MAUI** y **Blazor Hybrid**. Reproduce la biblioteca local del
 usuario (la carpeta de música del sistema) y, además, descarga audio de YouTube a MP3 de
 forma 100 % local con `yt-dlp` + FFmpeg, dejándolo en esa misma carpeta.
 
 Nació como un servicio web FastAPI, se migró a una aplicación de escritorio con Avalonia
 UI para eliminar la necesidad de servidor y, después, a **.NET MAUI** — Avalonia soportaba
 Linux pero MAUI no lo hace de escritorio, así que el soporte de Linux se retiró en esa
-migración a cambio de reproducción de audio y empaquetado más alineados con el
-ecosistema de Microsoft en Windows/macOS.
+migración. Más adelante se retiró también macOS (Mac Catalyst): la app es una aplicación
+de bandeja de Windows (WinUI + H.NotifyIcon.Maui) y es la única plataforma soportada.
 
 ## Estado
 
@@ -38,38 +38,30 @@ que resuelva los desafíos de JavaScript de YouTube con el Deno empaquetado.
 
 - Compilar sin red: `dotnet build -p:BundleExternalTools=false`.
 - Se usa `releases/latest` a propósito (yt-dlp necesita actualizarse a menudo).
-- RIDs soportados: `win-x64`, `win-arm64`, `osx-x64`, `osx-arm64` (la carpeta `osx-x64`
-  se usa también para el bundle universal de Mac Catalyst).
+- RID empaquetado: `win-x64` (los scripts aceptan también `win-arm64`).
 
 ### Reproducción de audio
 
 `IAudioPlayer` la implementa `PluginMauiAudioPlayer`, que envuelve el paquete
 `Plugin.Maui.Audio` (headless: no requiere montar ningún control en el árbol visual,
-a diferencia de `CommunityToolkit.Maui.Views.MediaElement`). Sustituyó a LibVLCSharp
-porque `VideoLAN.LibVLC.Mac` apunta a macOS de escritorio clásico, no al entorno
-sandboxeado de Mac Catalyst.
+a diferencia de `CommunityToolkit.Maui.Views.MediaElement`). Sustituyó a LibVLCSharp.
 
 ### Dónde se guardan los archivos
 
-El MP3 se guarda en la carpeta de música del usuario, resuelta por `IMusicLibrary`
-según el sistema operativo:
-
-| Plataforma          | Carpeta                                                          |
-|---------------------|-------------------------------------------------------------------|
-| Windows             | `SpecialFolder.MyMusic` (la carpeta «Música»/«Music» localizada) |
-| macOS / Mac Catalyst| `~/Music`                                                        |
+El MP3 se guarda en la carpeta de música del usuario, resuelta por `IMusicLibrary`:
+`SpecialFolder.MyMusic` (la carpeta «Música»/«Music» localizada por Windows).
 
 La base de datos SQLite guarda **solo los metadatos** de cada descarga
 (`DownloadRecord`: URL, título, artista, ruta del archivo, tamaño, estado y fecha).
 El archivo MP3 nunca se almacena en la base de datos. La ruta de la base de datos se
-resuelve con `FileSystem.AppDataDirectory` (MAUI Essentials), portable entre plataformas.
+resuelve con `FileSystem.AppDataDirectory` (MAUI Essentials).
 
 ## Características
 
 - 🎧 **Reproductor local** — Recorre los MP3 de la carpeta de música, muestra portada y metadatos, y los reproduce con controles de transporte y barra de forma de onda.
 - 🎵 **Descarga de MP3** — Extrae y convierte audio de vídeos de YouTube a MP3, 100 % en local, dentro de la propia carpeta de música.
 - 🖥️ **Aplicación de escritorio nativa** — Sin navegador ni servidor: se ejecuta directamente en tu equipo.
-- 🌐 **Windows y macOS** — Un mismo código base para ambas plataformas gracias a .NET MAUI.
+- 🪟 **Windows 10 y 11** — Aplicación de bandeja con instalador por usuario (sin permisos de administrador) o `.zip` portable.
 - 🎨 **UI oscura y responsive** — Diseño de dos paneles que colapsa a uno solo en ventanas estrechas; pensado para pantalla maximizada.
 - 📦 **Distribución autónoma** — Publicación self-contained, sin necesidad de instalar el runtime de .NET.
 
@@ -79,7 +71,7 @@ resuelve con `FileSystem.AppDataDirectory` (MAUI Essentials), portable entre pla
 |---------------------|-------------------------------------|
 | **Runtime**         | .NET 10                             |
 | **Lenguaje**        | C# 13                               |
-| **UI**              | .NET MAUI (tema oscuro)             |
+| **UI**              | Blazor Hybrid sobre .NET MAUI (tema oscuro) |
 | **Patrón**          | MVVM (CommunityToolkit.Mvvm) + inyección de dependencias (Microsoft.Extensions.DependencyInjection) |
 | **Reproducción**    | Plugin.Maui.Audio                   |
 | **Metadatos MP3**   | TagLibSharp                         |
@@ -94,10 +86,10 @@ resuelve con `FileSystem.AppDataDirectory` (MAUI Essentials), portable entre pla
 music-mp3-downloader/
 ├── MusicMp3Downloader.slnx              # Solución (formato XML .slnx)
 ├── core/                                # Proyecto MAUI (cabecera de la app)
-│   ├── MusicMp3Downloader.App.csproj    # SDK Microsoft.NET.Sdk.Razor; multi-target: net10.0-windows…, net10.0-maccatalyst
+│   ├── MusicMp3Downloader.App.csproj    # SDK Microsoft.NET.Sdk.Razor; TFM único: net10.0-windows10.0.19041.0
 │   ├── MauiProgram.cs                   # Arranque de MAUI + BlazorWebView + contenedor de DI
 │   ├── App.xaml / App.xaml.cs           # Recursos globales + CreateWindow (popup 440×620)
-│   ├── Platforms/                       # Cabeceras nativas (Windows/WinUI3, MacCatalyst)
+│   ├── Platforms/                       # Cabecera nativa de Windows (WinUI3)
 │   ├── Resources/                       # Icono de app, splash screen, ícono de bandeja
 │   ├── Components/                      # Player.razor + Player.razor.css — la UI real (HTML/CSS/C#)
 │   ├── wwwroot/                         # index.html, página host del BlazorWebView
@@ -122,7 +114,7 @@ music-mp3-downloader/
 - **Dos proyectos:** `src/core/MusicMp3Downloader.Core.csproj` (class library `net10.0`
   normal, sin ninguna referencia a `Microsoft.Maui.*`) contiene toda la lógica
   (ViewModels, Services, Data, Models) para que `test/` pueda compilarla y probarla sin
-  el workload de MAUI. `core/MusicMp3Downloader.App.csproj` (multi-target MAUI) contiene
+  el workload de MAUI. `core/MusicMp3Downloader.App.csproj` (MAUI, solo Windows) contiene
   solo la capa de presentación: Views, estilos, el control de forma de onda y las
   implementaciones que sí necesitan tipos de MAUI (`PluginMauiAudioPlayer`,
   `MauiUiDispatcher`).
@@ -184,10 +176,11 @@ e imagen, no contenido arbitrario.
 
 - [x] Motor de descarga con `yt-dlp` que guarda el MP3 en la carpeta de música del usuario.
 - [x] Reproductor local con UI de dos paneles, lista de biblioteca y barra de reproducción.
-- [x] Migración de Avalonia UI a .NET MAUI (Windows + macOS/Mac Catalyst).
+- [x] Migración de Avalonia UI a .NET MAUI + Blazor Hybrid.
+- [x] Enfoque exclusivo en Windows (se retira Mac Catalyst).
 - [ ] Reporte de progreso robusto y cancelación desde la UI.
 - [ ] Cola de reproducción editable, orden aleatorio y repetición.
 - [ ] Migraciones de EF Core y pantalla de historial de descargas.
 - [ ] Selección de carpeta de salida y calidad de audio.
 - [x] Suite de pruebas xUnit en `test/` (ViewModels + resolución de carpeta de música).
-- [ ] Empaquetado firmado por plataforma.
+- [ ] Instalador firmado (evitar el aviso de SmartScreen).

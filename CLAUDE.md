@@ -7,8 +7,8 @@ Guía para trabajar en este repositorio.
 Aplicación de bandeja para **Windows** (.NET 10 + .NET MAUI + Blazor Hybrid) que descarga
 audio de YouTube a MP3 **100 % en local** y lo reproduce. Sin servidor, sin nube. No hay
 ventana de escritorio normal: la app arranca oculta y el ícono de la bandeja muestra/oculta
-un popup emergente (como Mega/Discord). El proyecto sigue declarando el TFM
-`net10.0-maccatalyst`, pero solo Windows está soportado en CI/CD y en la práctica.
+un popup emergente (como Mega/Discord). **Solo Windows**: el proyecto declara un único TFM,
+`net10.0-windows10.0.19041.0` (Mac Catalyst se retiró).
 
 ## Estructura
 
@@ -28,15 +28,14 @@ CONTRIBUTING.md                  # flujo de contribución
 ```bash
 dotnet workload restore MusicMp3Downloader.slnx            # una vez, instala el workload MAUI que falte
 dotnet build MusicMp3Downloader.slnx -c Release             # compilar todo (App + Core + tests)
-dotnet run --project core/MusicMp3Downloader.App.csproj -f net10.0-windows10.0.19041.0   # ejecutar (Windows); usa net10.0-maccatalyst en macOS
+dotnet run --project core/MusicMp3Downloader.App.csproj -f net10.0-windows10.0.19041.0   # ejecutar (solo Windows)
 dotnet test MusicMp3Downloader.slnx                          # tests (solo referencian Core, no requieren workload MAUI)
 dotnet format MusicMp3Downloader.slnx --verify-no-changes    # estilo (la CI lo exige)
 ```
 
 La CI ejecuta exactamente `build` + `test` + `format`, únicamente en runners Windows
 (`windows-latest`); deben pasar los tres. La app es una aplicación de bandeja de Windows
-(WinUI + H.NotifyIcon.Maui), así que ni CI ni `deploy.yml` compilan, prueban ni empaquetan
-para macOS, aunque el proyecto siga declarando el TFM `net10.0-maccatalyst`.
+(WinUI + H.NotifyIcon.Maui) y no tiene objetivo para otro sistema operativo.
 
 ## Arquitectura
 
@@ -48,14 +47,14 @@ Dos proyectos, separados a propósito para que `test/` no necesite el workload d
   `ViewModelBase`, usan los generadores de `CommunityToolkit.Mvvm`). Los ViewModels no
   pueden usar tipos de MAUI: la portada se expone como `byte[]?`, y el marshalling a UI
   pasa por la interfaz propia `IUiDispatcher`.
-- **`core/MusicMp3Downloader.App.csproj`** — proyecto MAUI multi-target
-  (`net10.0-windows10.0.19041.0;net10.0-maccatalyst`) con SDK `Microsoft.NET.Sdk.Razor`
+- **`core/MusicMp3Downloader.App.csproj`** — proyecto MAUI solo Windows
+  (`net10.0-windows10.0.19041.0`) con SDK `Microsoft.NET.Sdk.Razor`
   (necesario para compilar `.razor`), referencia a `Core.csproj`. La UI es **Blazor
   Hybrid**, no XAML: `Components/Player.razor` + `Player.razor.css` (CSS isolation)
   implementan toda la interfaz en HTML/CSS/C#, montados dentro de un
   `BlazorWebView` (WebView2) alojado por `Views/MainPage.xaml` — la única página XAML
   real que queda es ese contenedor. `wwwroot/index.html` es la página host del
-  `BlazorWebView`. `Platforms/` trae las cabeceras Windows/WinUI3 y MacCatalyst, y las
+  `BlazorWebView`. `Platforms/` trae la cabecera Windows/WinUI3, y las
   implementaciones que sí necesitan MAUI: `PluginMauiAudioPlayer` (`IAudioPlayer`) y
   `MauiUiDispatcher` (`IUiDispatcher`).
 - **Componentes Razor + ViewModels.** Los servicios y ViewModels se registran en
@@ -74,7 +73,7 @@ Dos proyectos, separados a propósito para que `test/` no necesite el workload d
   añadidas después de que la base ya existía). Guarda **solo metadatos**; el MP3 vive
   únicamente en el sistema de archivos, en la carpeta de música del usuario. La ruta de la
   base de datos usa `FileSystem.AppDataDirectory` (MAUI Essentials).
-- **Bandeja e íconos:** `H.NotifyIcon.Maui` (`Views/TrayIconView.xaml`, solo Windows).
+- **Bandeja e íconos:** `H.NotifyIcon.Maui` (`Views/TrayIconView.xaml`).
   Arranca oculta (se oculta en el primer `Activated` de la ventana, no antes — MAUI la
   muestra igual justo después de `OnWindowCreated`); clic izquierdo alterna
   mostrar/ocultar; clic derecho ofrece "Mostrar"/"Salir"; cerrar con la X oculta en vez de
@@ -94,8 +93,8 @@ En ejecución `IExternalTools` los resuelve desde ahí, con reserva al `PATH`.
 - Deno es el intérprete de JavaScript que yt-dlp necesita para resolver los desafíos de
   YouTube; `DownloadService` se lo pasa con `--js-runtimes deno:<ruta>`. Sin él, YouTube
   oculta formatos o bloquea videos enteros.
-- RIDs soportados: `win-x64`, `win-arm64`, `osx-x64`, `osx-arm64` (Linux se quitó de
-  ambos scripts al migrar a MAUI).
+- RID empaquetado: `win-x64` (los scripts aceptan también `win-arm64`; los RIDs `osx-*`
+  de `fetch-tools.sh` quedan de la época de Mac Catalyst; el build de Windows no los usa).
 
 ## Tests
 
@@ -124,8 +123,7 @@ de Blazor. Añade pruebas junto con cualquier lógica no trivial.
   incondicionalmente todo `.xaml` de esa carpeta del item `MauiXaml`, asumiendo que es
   XAML nativo de WinUI para `XamlCompiler.exe` (como `App.xaml`) — si se pone ahí un
   `ContentView` de MAUI, `XamlCompiler.exe` falla en silencio (exit code 1, sin mensaje).
-  Cualquier vista de MAUI (aunque sea solo para Windows) va en `Views/`, excluida del
-  build de otras plataformas por item en el `.csproj`, no por carpeta.
+  Cualquier vista de MAUI va en `Views/`.
 - Blazor no re-renderiza un componente solo porque el ViewModel inyectado implemente
   `INotifyPropertyChanged`: hay que suscribirse a mano en `OnInitialized()` y llamar
   `StateHasChanged()` (ver `Player.razor`), y des-suscribirse en `Dispose()`
@@ -139,16 +137,11 @@ de Blazor. Añade pruebas junto con cualquier lógica no trivial.
   de progreso inferior sigue siendo el único control de seek.
 - Publicar para Windows requiere `-p:WindowsPackageType=None -p:WindowsAppSDKSelfContained=true`
   para obtener una carpeta autónoma (sin MSIX) que `installer.iss` pueda envolver.
-- **Nunca pases `-r`/`--runtime win-x64` explícito** al compilar/publicar `App.csproj`:
-  como el proyecto es multi-target, se vuelve una propiedad global de MSBuild que NuGet
-  intenta aplicar también al TFM `net10.0-maccatalyst` (combinación sin sentido
-  maccatalyst+win-x64), buscando un paquete de runtime Mono para Windows que no existe
-  (`NU1102: Microsoft.NETCore.App.Runtime.Mono.win-x64`). El RID de Windows se resuelve
-  solo, de forma implícita, al compilar/publicar con `-f net10.0-windows...` en un
-  runner/máquina Windows — no hace falta (ni conviene) forzarlo.
+- No hace falta pasar `-r`/`--runtime`: el RID `win-x64` se resuelve solo, de forma
+  implícita, al compilar/publicar con `-f net10.0-windows...` en una máquina Windows.
 - El TFM `net10.0-windows...` **no compila en hosts que no son Windows**, ni con
   `EnableWindowsTargeting=true` (esa propiedad solo habilita el *restore*, no la
   compilación): el XAML de `Platforms/Windows/` pasa por `XamlCompiler.exe`
-  (WindowsAppSDK), un binario de Windows. Por eso `TargetFrameworks` en `App.csproj`
-  está condicionado a `$([MSBuild]::IsOSPlatform('windows'))` — no lo hardcodees de
-  vuelta a una lista fija con ambos TFM.
+  (WindowsAppSDK), un binario de Windows. Como `App.csproj` es solo Windows, la solución
+  completa solo compila en Windows; en otros sistemas usa `dotnet test test/` (Core no
+  depende de MAUI).

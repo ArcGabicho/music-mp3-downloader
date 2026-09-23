@@ -8,7 +8,7 @@ el flujo de trabajo, los estándares de código y qué se espera de una Pull Req
 - [.NET SDK 10.0+](https://dotnet.microsoft.com/download/dotnet/10.0)
 - El workload de .NET MAUI: `dotnet workload install maui`
 - Git
-- Solo se compila/ejecuta en **Windows** o **macOS**; MAUI no soporta escritorio Linux.
+- **Windows 10/11**: la app es solo para Windows y el proyecto MAUI solo compila ahí.
 
 `yt-dlp`, `FFmpeg` y `Deno` **no** hace falta instalarlos: el build los descarga como binarios
 autónomos en `src/Tools/<rid>/` (ver [`src/Tools/README.md`](src/Tools/README.md)).
@@ -26,7 +26,7 @@ cd music-mp3-downloader
 dotnet workload restore MusicMp3Downloader.slnx
 dotnet restore MusicMp3Downloader.slnx
 dotnet build MusicMp3Downloader.slnx
-dotnet run --project core/MusicMp3Downloader.App.csproj -f net10.0-windows10.0.19041.0   # o net10.0-maccatalyst en macOS
+dotnet run --project core/MusicMp3Downloader.App.csproj -f net10.0-windows10.0.19041.0
 ```
 
 Antes de escribir código, lee el [perfil del proyecto](docs/app-overview.md) para
@@ -67,18 +67,13 @@ dotnet build MusicMp3Downloader.slnx --configuration Debug
 Publicación local de una carpeta autónoma (self-contained):
 
 ```bash
-# Windows (el RID win-x64 se resuelve solo; no pasar -r explícito, ver Trampas conocidas)
+# El RID win-x64 se resuelve solo; no hace falta pasar -r
 dotnet publish core/MusicMp3Downloader.App.csproj \
   -c Release -f net10.0-windows10.0.19041.0 --self-contained true \
   -p:WindowsPackageType=None -p:WindowsAppSDKSelfContained=true
-
-# macOS (universal x64+arm64, produce un bundle .app)
-dotnet publish core/MusicMp3Downloader.App.csproj \
-  -c Release -f net10.0-maccatalyst
 ```
 
-El resultado queda en `core/bin/Release/<tfm>/<rid>/publish/` (Windows) o como un `.app`
-bajo `core/bin/Release/net10.0-maccatalyst/.../publish/` (macOS).
+El resultado queda en `core/bin/Release/<tfm>/<rid>/publish/`.
 
 La publicación oficial (GitHub Releases) la automatiza `deploy.yml`; no crees tags ni
 subas releases a mano. Ver [Guía de CI/CD](docs/ci-guide.md).
@@ -99,7 +94,7 @@ Cada `push` y `pull_request` sobre `master` dispara `.github/workflows/ci.yml`:
 
 | Job       | Descripción                                                                 |
 |-----------|---------------------------------------------------------------------------|
-| `build`   | Restaura, compila y ejecuta las pruebas en `windows-latest` y `macos-latest`. |
+| `build`   | Restaura, compila y ejecuta las pruebas en `windows-latest`. |
 | `format`  | Verifica el estilo con `dotnet format --verify-no-changes`.                |
 | `publish` | Solo en `push` a `master`: genera binarios self-contained como artefactos. |
 
